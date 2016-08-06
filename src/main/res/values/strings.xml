@@ -1,0 +1,22 @@
+<resources>
+    <string name="app_name">Survey</string>
+    <string name="like_to_start_survey">Like to start survey?</string>
+    <string name="yes">YES</string>
+    <string name="no">NO</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="next">NEXT</string>
+    <string name="done">DONE</string>
+    <string name="previous">PREVIOUS</string>
+    <string name="validate_answer">Please provide an answer to proceed further.</string>
+    <string name="alert_exit">Are you sure you want to exit?</string>
+    <string name="button_continue">CONTINUE</string>
+    <string name="button_submit">SUBMIT</string>
+    <string name="survey_title">Survey</string>
+    <string name="toast_failed_general">Something went wrong. Try again.</string>
+    <string name="alert_retry">RETRY</string>
+    <string name="alert_title_alert">Alert</string>
+    <string name="alert_message_survey_submit_failed">Failed to submit survey. Please try again.</string>
+    <string name="close">CLOSE</string>
+</resources>

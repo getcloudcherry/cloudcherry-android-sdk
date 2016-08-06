@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<android.support.v7.widget.Toolbar xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/toolbar"
+    android:layout_width="match_parent"
+    android:layout_height="?attr/actionBarSize"
+    android:background="@color/colorPrimary"
+    app:contentInsetEnd="10dp"
+    app:contentInsetLeft="0dp"
+    app:contentInsetRight="10dp"
+    app:contentInsetStart="0dp">
+
+    <ImageView
+        android:id="@+id/ivLogo"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:visibility="gone"
+        android:layout_margin="@dimen/margin_8"/>
+
+    <com.getcloudcherry.survey.customviews.AutoResizeActionBarTextView
+        android:id="@+id/tvToolbarTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:maxLines="1"
+        android:text="Survey" />
+</android.support.v7.widget.Toolbar>
