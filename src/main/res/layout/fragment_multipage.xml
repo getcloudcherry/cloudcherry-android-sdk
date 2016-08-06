@@ -1,0 +1,48 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <com.getcloudcherry.survey.customviews.CustomViewPager
+        android:id="@+id/viewPager"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@+id/linearFooter"/>
+
+    <LinearLayout
+        android:id="@+id/linearFooter"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:paddingBottom="@dimen/margin_12"
+        android:paddingLeft="@dimen/margin_12"
+        android:paddingRight="@dimen/margin_12"
+        android:paddingTop="@dimen/margin_12">
+
+        <Button
+            android:id="@+id/bPrevious"
+            style="?android:attr/borderlessButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:text="@string/previous" />
+
+        <TextView
+            android:id="@+id/tvPage"
+            android:layout_width="60dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/margin_8"
+            android:layout_gravity="center_vertical"
+            android:gravity="center"
+            android:text=""/>
+
+        <Button
+            android:id="@+id/bNext"
+            style="?android:attr/borderlessButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:text="@string/next" />
+    </LinearLayout>
+
+</RelativeLayout>
