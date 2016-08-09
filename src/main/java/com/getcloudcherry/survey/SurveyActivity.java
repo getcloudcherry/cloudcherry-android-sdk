@@ -19,6 +19,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.getcloudcherry.survey.filter.QuestionFilterHelper;
 import com.getcloudcherry.survey.helper.RecordAnswer;
 import com.getcloudcherry.survey.builder.SurveyConfigBuilder;
 import com.getcloudcherry.survey.customviews.CustomViewPager;
@@ -253,15 +254,11 @@ public class SurveyActivity extends AppCompatActivity {
 
     void filterQuestions(SurveyResponse iResponse) {
         mSurveyQuestions.clear();
-        for (SurveyQuestions aQuestion : iResponse.questions) {
-            if (!aQuestion.isRetired && (aQuestion.displayType.equals("Scale") || aQuestion.displayType.equals("MultilineText"))) {
-                mSurveyQuestions.add(aQuestion);
-            }
-        }
+        mSurveyQuestions.addAll(QuestionFilterHelper.getFilteredQuestions(iResponse));
     }
 
     public void submitAnswers(final AlertDialog aAlert) {
-        if(RecordAnswer.getInstance().mAnswers.size() > 0) {
+        if (RecordAnswer.getInstance().mAnswers.size() > 0) {
             final ProgressDialog aProgressDialog = new ProgressDialog(SurveyActivity.this);
             aProgressDialog.setTitle("Submitting survey");
             aProgressDialog.setMessage("Please wait...");
@@ -297,12 +294,12 @@ public class SurveyActivity extends AppCompatActivity {
                     }
                 }
             });
-        }else{
+        } else {
             finishSurvey(aAlert);
         }
     }
 
-    void finishSurvey(AlertDialog aAlert){
+    void finishSurvey(AlertDialog aAlert) {
         if (aAlert != null) {
             aAlert.cancel();
         }

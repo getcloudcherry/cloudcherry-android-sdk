@@ -12,6 +12,7 @@ public class APIHelper {
     public static final String GET_QUESTIONS = "SurveyByToken/{token}/{deviceId}";
     public static final String POST_ANSWER_PARTIAL = "PartialSurvey/{id}/{complete}";
     public static final String POST_ANSWER_ALL = "SurveyByToken/{token}";
+    public static final String POST_CREATE_SURVEY_TOKEN = "SurveyByToken";
 
     /**
      * Validates email

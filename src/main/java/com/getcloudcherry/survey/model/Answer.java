@@ -9,10 +9,15 @@ public class Answer {
     public String textInput;
     public int numberInput;
 
-    public Answer(String questionId, String questionText, String textInput, int numberInput) {
+    public Answer(String questionId, String questionText, String textInput) {
         this.questionId = questionId;
         this.questionText = questionText;
         this.textInput = textInput;
+    }
+
+    public Answer(String questionId, String questionText, int numberInput) {
+        this.questionId = questionId;
+        this.questionText = questionText;
         this.numberInput = numberInput;
     }
 }

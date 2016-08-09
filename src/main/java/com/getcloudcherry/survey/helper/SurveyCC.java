@@ -4,10 +4,18 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.getcloudcherry.survey.R;
 import com.getcloudcherry.survey.SurveyActivity;
 import com.getcloudcherry.survey.builder.SurveyConfigBuilder;
+import com.getcloudcherry.survey.filter.QuestionTypes;
+import com.getcloudcherry.survey.model.Answer;
+import com.getcloudcherry.survey.model.SurveyQuestions;
+import com.getcloudcherry.survey.model.SurveyResponse;
+
+import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * Created by riteshdubey on 7/30/16.
@@ -57,8 +65,8 @@ public class SurveyCC {
     /**
      * Initializes the SDK with application context
      *
-     * @param iContext application context
-     * @param iSurveyToken     Survey Token provided by cloud cherry
+     * @param iContext     application context
+     * @param iSurveyToken Survey Token provided by cloud cherry
      */
     public static void initialise(Context iContext, String iSurveyToken) {
         mContext = iContext;
@@ -276,5 +284,16 @@ public class SurveyCC {
 
     public int getFooterPageFontColor() {
         return FOOTER_PAGE_FONT_COLOR;
+    }
+
+    /**
+     * Sets pre-fill questions
+     *
+     * @param iPreFillAnswers HashMap of pre-fill question data
+     *                        <br>key = question tag
+     *                        <br>value = answer object
+     */
+    public void setPreFill(HashMap<String, Object> iPreFillAnswers) {
+        RecordAnswer.getInstance().preFillQuestionWithTags(iPreFillAnswers);
     }
 }
