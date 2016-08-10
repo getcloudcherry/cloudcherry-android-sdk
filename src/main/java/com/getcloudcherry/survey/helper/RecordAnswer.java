@@ -13,9 +13,6 @@ import java.util.Map;
 
 /**
  * Created by riteshdubey on 8/4/16.
- */
-
-/**
  * Helper Singleton class to capture survey answers
  */
 public class RecordAnswer {
@@ -119,6 +116,6 @@ public class RecordAnswer {
         mAnswers.clear();
         mPreFillAnswers.clear();
         mStartTime = 0;
-        mSurveyAnswer = null;
     }
+
 }

@@ -19,13 +19,13 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.getcloudcherry.survey.filter.QuestionFilterHelper;
-import com.getcloudcherry.survey.helper.RecordAnswer;
 import com.getcloudcherry.survey.builder.SurveyConfigBuilder;
 import com.getcloudcherry.survey.customviews.CustomViewPager;
-import com.getcloudcherry.survey.fragments.WelcomeFragment;
+import com.getcloudcherry.survey.filter.QuestionFilterHelper;
 import com.getcloudcherry.survey.fragments.MultiPageFragment;
 import com.getcloudcherry.survey.fragments.ThanksFragment;
+import com.getcloudcherry.survey.fragments.WelcomeFragment;
+import com.getcloudcherry.survey.helper.RecordAnswer;
 import com.getcloudcherry.survey.helper.SurveyCC;
 import com.getcloudcherry.survey.httpclient.SurveyClient;
 import com.getcloudcherry.survey.model.SurveyQuestions;

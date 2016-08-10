@@ -4,17 +4,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
-import android.util.Log;
 
 import com.getcloudcherry.survey.R;
 import com.getcloudcherry.survey.SurveyActivity;
 import com.getcloudcherry.survey.builder.SurveyConfigBuilder;
-import com.getcloudcherry.survey.filter.QuestionTypes;
-import com.getcloudcherry.survey.model.Answer;
-import com.getcloudcherry.survey.model.SurveyQuestions;
-import com.getcloudcherry.survey.model.SurveyResponse;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 
 /**

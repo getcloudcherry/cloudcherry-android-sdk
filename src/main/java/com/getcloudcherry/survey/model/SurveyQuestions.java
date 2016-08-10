@@ -42,7 +42,6 @@ public class SurveyQuestions implements Parcelable {
                 '}';
     }
 
-    @Override
     public int describeContents() {
         return 0;
     }

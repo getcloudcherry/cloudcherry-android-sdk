@@ -26,5 +26,4 @@ public interface API {
 
     @POST(APIHelper.POST_CREATE_SURVEY_TOKEN)
     Call<ResponseBody> createSurveyToken(@Body SurveyAnswers response);
-
 }
