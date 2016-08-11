@@ -22,9 +22,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.getcloudcherry.survey.R;
+import com.getcloudcherry.survey.SurveyActivity;
 import com.getcloudcherry.survey.helper.RecordAnswer;
 import com.getcloudcherry.survey.helper.SurveyCC;
+import com.getcloudcherry.survey.model.Answer;
+import com.getcloudcherry.survey.model.SurveyAnswers;
 import com.getcloudcherry.survey.model.SurveyQuestions;
+
+import java.util.ArrayList;
 
 
 /**
@@ -38,6 +43,10 @@ public class QuestionNPSFragment extends Fragment implements RadioGroup.OnChecke
     private int mMin;
     private int mMax;
     private String mAnswer;
+    private static final String TAG_TYPE = "NPS";
+    private boolean isNPS;
+    private boolean isLastPage;
+    private int mCurrentPosition;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -77,7 +86,11 @@ public class QuestionNPSFragment extends Fragment implements RadioGroup.OnChecke
                     aRadio.setText(String.valueOf(mMin + i));
                     aRadio.setId(mMin + i);
                     aRadio.setPadding(0, (int) convertDpToPixel(5, getActivity()), 0, (int) convertDpToPixel(5, getActivity()));
-                    setRequiredColor(aRadio, i);
+                    if (isNPS) {
+                        setRequiredColor(aRadio, i);
+                    } else {
+                        aRadio.setBackgroundResource(R.drawable.rate0_check);
+                    }
                     aRadio.setButtonDrawable(android.R.color.transparent);
                     aRadio.setGravity(Gravity.CENTER);
                     aRadio.setLayoutParams(new RadioGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
@@ -160,9 +173,27 @@ public class QuestionNPSFragment extends Fragment implements RadioGroup.OnChecke
             if (TextUtils.isEmpty(mAnswer)) {
                 showToast(getString(R.string.validate_answer));
                 return false;
+            } else {
+                submitPartial();
             }
+        } else {
+            submitPartial();
         }
         return true;
+    }
+
+    /**
+     * Contains logic to call the Partial response API to submit partial response
+     */
+    void submitPartial() {
+        ArrayList<Answer> aAnswers = new ArrayList<>();
+        if (isNPS)
+            aAnswers.add(new Answer(mQuestion.id, mQuestion.text, !TextUtils.isEmpty(mAnswer) ? Integer.parseInt(mAnswer) : null));
+        else
+            aAnswers.add(new Answer(mQuestion.id, mQuestion.text, mAnswer));
+        if (SurveyCC.getInstance().isPartialCapturing()) {
+            ((SurveyActivity) getActivity()).submitAnswerPartial(isLastPage, aAnswers);
+        }
     }
 
     /**
@@ -181,6 +212,9 @@ public class QuestionNPSFragment extends Fragment implements RadioGroup.OnChecke
         Bundle aBundle = getArguments();
         if (aBundle != null) {
             mQuestion = aBundle.getParcelable(MultiPageFragment.EXTRAS_QUESTION);
+            mCurrentPosition = aBundle.getInt(MultiPageFragment.EXTRAS_POSITION);
+            isNPS = mQuestion.questionTags.contains(TAG_TYPE);
+            isLastPage = (mCurrentPosition == (SurveyCC.getInstance().getSurveyQuestions().size() - 1));
         }
     }
 
@@ -188,6 +222,10 @@ public class QuestionNPSFragment extends Fragment implements RadioGroup.OnChecke
     public void onCheckedChanged(RadioGroup radioGroup, int i) {
         Log.i("Radio", i + "");
         mAnswer = String.valueOf(i);
-        RecordAnswer.getInstance().recordAnswer(mQuestion, mAnswer);
+        if (isNPS) {
+            RecordAnswer.getInstance().recordAnswer(mQuestion, Integer.parseInt(mAnswer));
+        } else {
+            RecordAnswer.getInstance().recordAnswer(mQuestion, mAnswer);
+        }
     }
 }

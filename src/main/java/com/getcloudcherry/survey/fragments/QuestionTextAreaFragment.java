@@ -14,9 +14,13 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.getcloudcherry.survey.R;
+import com.getcloudcherry.survey.SurveyActivity;
 import com.getcloudcherry.survey.helper.RecordAnswer;
 import com.getcloudcherry.survey.helper.SurveyCC;
+import com.getcloudcherry.survey.model.Answer;
 import com.getcloudcherry.survey.model.SurveyQuestions;
+
+import java.util.ArrayList;
 
 
 /**
@@ -27,6 +31,8 @@ public class QuestionTextAreaFragment extends Fragment {
     private SurveyQuestions mQuestion;
     private TextView mTVTitle;
     private LinearLayout mQuestionHeaderLayout;
+    private boolean isLastPage;
+    private int mCurrentPosition;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -78,12 +84,31 @@ public class QuestionTextAreaFragment extends Fragment {
                 return false;
             } else {
                 RecordAnswer.getInstance().recordAnswer(mQuestion, mETAnswer.getText().toString().trim());
+                submitPartial();
             }
         } else {
-            if (mETAnswer.getText().toString().trim().length() != 0)
-                RecordAnswer.getInstance().recordAnswer(mQuestion, mETAnswer.getText().toString().trim());
+            // If partial response is enabled then capture
+            if (SurveyCC.getInstance().isPartialCapturing()) {
+                submitPartial();
+            } else {
+                //Don't capture empty answers
+                if (mETAnswer.getText().toString().trim().length() != 0)
+                    RecordAnswer.getInstance().recordAnswer(mQuestion, mETAnswer.getText().toString().trim());
+            }
+
         }
         return true;
+    }
+
+    /**
+     * Contains logic to call the Partial response API to submit partial response
+     */
+    void submitPartial() {
+        ArrayList<Answer> aAnswers = new ArrayList<>();
+        aAnswers.add(new Answer(mQuestion.id, mQuestion.text, mETAnswer.getText().toString().trim()));
+        if (SurveyCC.getInstance().isPartialCapturing()) {
+            ((SurveyActivity) getActivity()).submitAnswerPartial(isLastPage, aAnswers);
+        }
     }
 
     /**
@@ -102,6 +127,8 @@ public class QuestionTextAreaFragment extends Fragment {
         Bundle aBundle = getArguments();
         if (aBundle != null) {
             mQuestion = aBundle.getParcelable(MultiPageFragment.EXTRAS_QUESTION);
+            mCurrentPosition = aBundle.getInt(MultiPageFragment.EXTRAS_POSITION);
+            isLastPage = (mCurrentPosition == (SurveyCC.getInstance().getSurveyQuestions().size() - 1));
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.getcloudcherry.survey.helper;
 
+import com.getcloudcherry.survey.model.LoginToken;
 import com.getcloudcherry.survey.model.SurveyAnswers;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -28,7 +29,11 @@ public class GsonHelper {
         return mGson.fromJson(json, class1);
     }
 
-    public static String toJson(SurveyAnswers iSurveyAnswer) {
+    public static String toSurveyAnswerJson(SurveyAnswers iSurveyAnswer) {
         return mGson.toJson(iSurveyAnswer);
+    }
+
+    public static String toUserJson(LoginToken iData) {
+        return mGson.toJson(iData);
     }
 }

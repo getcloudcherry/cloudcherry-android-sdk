@@ -32,7 +32,10 @@ public class SurveyQuestions implements Parcelable {
     public boolean isRetired;
 
 
-
+    public SurveyQuestions(String id, String text) {
+        this.id = id;
+        this.text = text;
+    }
 
     @Override
     public String toString() {

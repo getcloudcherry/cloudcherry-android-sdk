@@ -65,6 +65,16 @@ public class RecordAnswer {
         mAnswers.put(iQuestion.id, new Answer(iQuestion.id, iQuestion.text, iAnswer));
     }
 
+    /**
+     * Saves answer to a particular question
+     *
+     * @param iQuestionId question id
+     * @param iAnswer     answer object
+     */
+    public void recordAnswer(String iQuestionId, Answer iAnswer) {
+        mAnswers.put(iQuestionId, iAnswer);
+    }
+
     public void preFillQuestionWithTags(HashMap<String, Object> iPreFill) {
         mPreFillAnswers = iPreFill;
     }
@@ -82,6 +92,29 @@ public class RecordAnswer {
         mSurveyAnswer.surveyClient = "mobile";
         mSurveyAnswer.responses = new ArrayList<>(mAnswers.values());
         return mSurveyAnswer;
+    }
+
+
+    /**
+     * Gets the saved answer array object
+     *
+     * @return
+     */
+    public ArrayList<Answer> getSavedAnswerList() {
+        return new ArrayList<Answer>(mAnswers.values());
+    }
+
+    /**
+     * Gets the saved answer array object for particular question id as needed by the partialResponse API
+     *
+     * @param iQuestionId question id
+     * @return
+     */
+    public ArrayList<Answer> getSavedAnswerForQuestionId(String iQuestionId) {
+        ArrayList<Answer> aAnswer = new ArrayList<>();
+        if (mAnswers.get(iQuestionId) != null)
+            aAnswer.add(mAnswers.get(iQuestionId));
+        return aAnswer;
     }
 
     /**

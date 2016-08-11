@@ -8,7 +8,14 @@ import android.text.TextUtils;
 import com.getcloudcherry.survey.R;
 import com.getcloudcherry.survey.SurveyActivity;
 import com.getcloudcherry.survey.builder.SurveyConfigBuilder;
+import com.getcloudcherry.survey.filter.QuestionFilterHelper;
+import com.getcloudcherry.survey.interfaces.FragmentCallBack;
+import com.getcloudcherry.survey.interfaces.QuestionCallback;
+import com.getcloudcherry.survey.model.Answer;
+import com.getcloudcherry.survey.model.SurveyQuestions;
+import com.getcloudcherry.survey.model.SurveyResponse;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 /**
@@ -21,8 +28,13 @@ import java.util.HashMap;
 public class SurveyCC {
     public static SurveyCC mInstance;
     public static Context mContext;
-    public static String mSurveyToken;
+    private static String mSurveyToken;
+    private static boolean mShouldCreate;
 
+    private static String mUserName;
+    private static String mPassword;
+    private static String mPartialResponseId;
+    private boolean mIsPartialCapture;
     public String WELCOME_MESSAGE = "";
     public String THANKS_MESSAGE = "";
     public boolean SHOW_WELCOME_MESSAGE = false;
@@ -54,6 +66,12 @@ public class SurveyCC {
     public String FOOTER_PAGE_FONT_PATH = "";
     public int FOOTER_PAGE_FONT_SIZE = 12;
     public int FOOTER_PAGE_FONT_COLOR = android.R.color.white;
+    private SurveyResponse mSurveyResponse;
+    private ArrayList<SurveyQuestions> mSurveyQuestions = new ArrayList<>();
+
+    //Listeners
+    private ArrayList<FragmentCallBack> mFragmentDataCallback = new ArrayList<>();
+    private ArrayList<QuestionCallback> mQuestionCallbacks = new ArrayList<>();
 
 
     /**
@@ -65,7 +83,24 @@ public class SurveyCC {
     public static void initialise(Context iContext, String iSurveyToken) {
         mContext = iContext;
         mSurveyToken = iSurveyToken;
+        mShouldCreate = false;
         getInstance();
+    }
+
+    /**
+     * Initializes the SDK with application context
+     *
+     * @param iContext application context
+     */
+    public static void initialise(Context iContext, String iUsername, String iPassword) {
+        setCredentials(iUsername, iPassword);
+        initialise(iContext, null);
+        mShouldCreate = true;
+    }
+
+    private static void setCredentials(String iUserName, String iPassword) {
+        mUserName = iUserName;
+        mPassword = iPassword;
     }
 
     /**
@@ -175,9 +210,109 @@ public class SurveyCC {
     private void checkSDKInitialized() {
         if (mContext == null) {
             throw new RuntimeException("Context not initialized");
-        } else if (TextUtils.isEmpty(mSurveyToken)) {
-            throw new RuntimeException("SDK key not initialized");
         }
+    }
+
+    /**
+     * Gets the survey token
+     *
+     * @return survey token
+     */
+    public String getSurveyToken() {
+        return mSurveyToken;
+    }
+
+    /**
+     * Sets survey token
+     *
+     * @param iSurveyToken survey token
+     */
+    public void setSurveyToken(String iSurveyToken) {
+        mSurveyToken = iSurveyToken;
+    }
+
+    /**
+     * Sets pre-fill questions
+     *
+     * @param iPreFillAnswers HashMap of pre-fill question data
+     *                        <br>key = question tag
+     *                        <br>value = answer object
+     */
+    public void setPreFill(HashMap<String, Object> iPreFillAnswers) {
+        RecordAnswer.getInstance().preFillQuestionWithTags(iPreFillAnswers);
+    }
+
+    /**
+     * Sets pre-fill questions
+     *
+     * @param iPreFillAnswers HashMap of pre-fill question data
+     *                        <br>key = question tag
+     *                        <br>value = answer object
+     */
+    public void setPreFillFromAPI(ArrayList<Answer> iPreFillAnswers) {
+        if (iPreFillAnswers != null)
+            for (Answer aAnswer : iPreFillAnswers) {
+                RecordAnswer.getInstance().recordAnswer(aAnswer.questionId, aAnswer);
+            }
+    }
+
+    /**
+     * Call to check whether to create a new Survey Token or use static Survey Token
+     *
+     * @return boolean
+     */
+    public boolean shouldCreateToken() {
+        return mShouldCreate;
+    }
+
+    /**
+     * Gets the username
+     *
+     * @return username
+     */
+    public String getUserName() {
+        return mUserName;
+    }
+
+    /**
+     * Gets the password
+     *
+     * @return password
+     */
+    public String getPassword() {
+        return mPassword;
+    }
+
+    /**
+     * Gets the partial response id
+     *
+     * @return partialResponseId
+     */
+    public String getPartialResponseId() {
+        return mPartialResponseId;
+    }
+
+    /**
+     * Sets partial response id
+     *
+     * @param iPartialResponseId partial response id
+     */
+    public void setPartialResponseId(String iPartialResponseId) {
+        if (!TextUtils.isEmpty(iPartialResponseId)) {
+            mPartialResponseId = iPartialResponseId;
+            mIsPartialCapture = true;
+        } else {
+            mIsPartialCapture = false;
+        }
+    }
+
+    /**
+     * Checks if response can be partially captured
+     *
+     * @return boolean
+     */
+    public boolean isPartialCapturing() {
+        return mIsPartialCapture;
     }
 
     public String getWelcomeMessage() {
@@ -280,14 +415,111 @@ public class SurveyCC {
         return FOOTER_PAGE_FONT_COLOR;
     }
 
+    //***************************Fragment Data Callback*****************************//
+
     /**
-     * Sets pre-fill questions
+     * Sets listener to receive updates on current question being displayed
      *
-     * @param iPreFillAnswers HashMap of pre-fill question data
-     *                        <br>key = question tag
-     *                        <br>value = answer object
+     * @param iCallBack
      */
-    public void setPreFill(HashMap<String, Object> iPreFillAnswers) {
-        RecordAnswer.getInstance().preFillQuestionWithTags(iPreFillAnswers);
+    public void setOnFragmentDataListener(FragmentCallBack iCallBack) {
+        if (iCallBack != null)
+            mFragmentDataCallback.add(iCallBack);
     }
+
+    /**
+     * Gets array list of all the listeners registered for current question being displayed
+     *
+     * @return
+     */
+    private ArrayList<FragmentCallBack> getFragmentDataListeners() {
+        return mFragmentDataCallback;
+    }
+
+    /**
+     * Sends data to the registered listeners for current question being displayed
+     *
+     * @param iQuestion  question object
+     * @param iPosition  position of the viewpager item being displayed
+     * @param isLastPage boolean whether the item displayed is the last page or not
+     */
+    public void sendFragmentData(SurveyQuestions iQuestion, int iPosition, boolean isLastPage) {
+        if (mFragmentDataCallback != null) {
+            for (FragmentCallBack aCallBack : mFragmentDataCallback) {
+                aCallBack.onQuestionDisplayed(iQuestion, iPosition, isLastPage);
+            }
+        }
+    }
+
+    //***************************Fragment Data Callback*****************************//
+
+    //******************************Question CallBack**********************************//
+
+    /**
+     * Sets listener to receive updates on current question being displayed
+     *
+     * @param iCallBack
+     */
+    public void setQuestionListener(QuestionCallback iCallBack) {
+        if (iCallBack != null)
+            mQuestionCallbacks.add(iCallBack);
+    }
+
+    /**
+     * Gets array list of all the listeners registered for current question being displayed
+     *
+     * @return
+     */
+    private ArrayList<QuestionCallback> getQuestionCallback() {
+        return mQuestionCallbacks;
+    }
+
+    /**
+     * Sends arraylist of survey questions
+     */
+    public void sendQuestions() {
+        if (mQuestionCallbacks != null) {
+            for (QuestionCallback aCallBack : mQuestionCallbacks) {
+                aCallBack.onGetSurveyQuestions(getSurveyQuestions());
+                aCallBack.onGetSurveyResponse(getSurveyResponse());
+            }
+        }
+    }
+
+    //******************************Question CallBack**********************************//
+
+
+    /**
+     * Sets SurveyResponse object
+     *
+     * @param iResponse
+     */
+    public void setSurveyResponse(SurveyResponse iResponse) {
+        if (iResponse != null) {
+            mSurveyResponse = iResponse;
+            mSurveyQuestions.clear();
+            mSurveyQuestions.addAll(QuestionFilterHelper.getFilteredQuestions(mSurveyResponse));
+            setPartialResponseId(iResponse.partialResponseId);
+            sendQuestions();
+        }
+    }
+
+    /**
+     * Gets SurveyResponse object
+     *
+     * @return SurveyResponse object
+     */
+    public SurveyResponse getSurveyResponse() {
+        return mSurveyResponse;
+    }
+
+    /**
+     * Gets array list of survey questions
+     *
+     * @return array list of survey questions
+     */
+    public ArrayList<SurveyQuestions> getSurveyQuestions() {
+        return mSurveyQuestions;
+    }
+
 }

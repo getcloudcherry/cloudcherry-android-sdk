@@ -5,7 +5,9 @@ import android.os.Handler;
 import android.os.Looper;
 import android.widget.Toast;
 
+import com.getcloudcherry.survey.helper.Constants;
 import com.getcloudcherry.survey.helper.SurveyCC;
+import com.getcloudcherry.survey.storage.CCPreferences;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
@@ -39,7 +41,7 @@ public class SurveyClient {
                     public Response intercept(Chain chain) throws IOException {
                         Request original = chain.request();
                         // Request customization: add request headers
-                        Request.Builder requestBuilder = original.newBuilder().header("Connection", "close").header("Authorization", "Bearer " + "") // <-- this is the important line
+                        Request.Builder requestBuilder = original.newBuilder().header("Connection", "close").header(Constants.AUTHORIZATION, Constants.AUTHORIZATION_BEARER + " " + CCPreferences.getInstance(SurveyCC.getInstance().getContext()).getAccessToken()) // <-- this is the important line
                                 .method(original.method(), original.body());
                         Request request = requestBuilder.build();
                         Response response = chain.proceed(request);
