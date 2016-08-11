@@ -19,16 +19,24 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.getcloudcherry.survey.helper.RecordAnswer;
 import com.getcloudcherry.survey.builder.SurveyConfigBuilder;
 import com.getcloudcherry.survey.customviews.CustomViewPager;
-import com.getcloudcherry.survey.fragments.WelcomeFragment;
+import com.getcloudcherry.survey.filter.QuestionFilterHelper;
 import com.getcloudcherry.survey.fragments.MultiPageFragment;
 import com.getcloudcherry.survey.fragments.ThanksFragment;
+import com.getcloudcherry.survey.fragments.WelcomeFragment;
+import com.getcloudcherry.survey.helper.Constants;
+import com.getcloudcherry.survey.helper.RecordAnswer;
 import com.getcloudcherry.survey.helper.SurveyCC;
 import com.getcloudcherry.survey.httpclient.SurveyClient;
+import com.getcloudcherry.survey.interfaces.FragmentCallBack;
+import com.getcloudcherry.survey.interfaces.QuestionCallback;
+import com.getcloudcherry.survey.model.Answer;
+import com.getcloudcherry.survey.model.LoginToken;
 import com.getcloudcherry.survey.model.SurveyQuestions;
 import com.getcloudcherry.survey.model.SurveyResponse;
+import com.getcloudcherry.survey.model.SurveyToken;
+import com.getcloudcherry.survey.storage.CCPreferences;
 import com.koushikdutta.ion.Ion;
 
 import java.util.ArrayList;
@@ -38,7 +46,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class SurveyActivity extends AppCompatActivity {
+public class SurveyActivity extends AppCompatActivity implements FragmentCallBack {
     public ArrayList<SurveyQuestions> mSurveyQuestions = new ArrayList<>();
     private SurveyResponse mSurveyResponse;
     private ImageView mIVLogo;
@@ -46,6 +54,13 @@ public class SurveyActivity extends AppCompatActivity {
     private Toolbar mToolbar;
     private TextView mTvToolbarTitle;
     private ProgressBar mProgressLoading;
+    private static final int RETRY_SUBMIT = 0;
+    private static final int RETRY_LOGIN = 1;
+    private static final int RETRY_CREATE_TOKEN = 2;
+    private static final int RETRY_QUESTIONS = 3;
+    private AlertDialog aAlertDialog;
+    private boolean mIsLastPage;
+    private int mCurrentPage = 0;
 
 
     @Override
@@ -55,7 +70,13 @@ public class SurveyActivity extends AppCompatActivity {
         mProgressLoading = (ProgressBar) findViewById(R.id.progressBar);
         ION = Ion.getDefault(getApplicationContext());
 //        initToolbar();
-        getQuestions();
+        if (SurveyCC.getInstance().shouldCreateToken()) {
+            createTokenAndGetQuestions();
+        } else {
+            getQuestions();
+        }
+
+        SurveyCC.getInstance().setOnFragmentDataListener(this);
     }
 
     /**
@@ -134,29 +155,38 @@ public class SurveyActivity extends AppCompatActivity {
      * @param iMessage Message to display
      */
     public void showAlertYesNo(String iMessage) {
-        final AlertDialog aAlert = new AlertDialog.Builder(this).setPositiveButton(R.string.yes, null).setNegativeButton(R.string.no, null).create();
-        aAlert.setMessage(iMessage);
-        aAlert.setCancelable(false);
-        aAlert.setOnShowListener(new DialogInterface.OnShowListener() {
+        aAlertDialog = new AlertDialog.Builder(this).setPositiveButton(R.string.yes, null).setNegativeButton(R.string.no, null).create();
+        aAlertDialog.setMessage(iMessage);
+        aAlertDialog.setCancelable(false);
+        aAlertDialog.setOnShowListener(new DialogInterface.OnShowListener() {
             @Override
             public void onShow(DialogInterface dialog) {
-                aAlert.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.BLACK);
-                aAlert.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(Color.BLACK);
-                aAlert.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
+                aAlertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.BLACK);
+                aAlertDialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(Color.BLACK);
+                aAlertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        submitAnswers(aAlert);
+                        if (RecordAnswer.getInstance().mAnswers.size() > 0) {
+                            aAlertDialog.cancel();
+                            if (!SurveyCC.getInstance().isPartialCapturing()) {
+                                submitAnswers();
+                            } else {
+                                finishSurvey();
+                            }
+                        } else {
+                            finishSurvey();
+                        }
                     }
                 });
-                aAlert.getButton(AlertDialog.BUTTON_NEGATIVE).setOnClickListener(new View.OnClickListener() {
+                aAlertDialog.getButton(AlertDialog.BUTTON_NEGATIVE).setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        aAlert.cancel();
+                        aAlertDialog.cancel();
                     }
                 });
             }
         });
-        aAlert.show();
+        aAlertDialog.show();
     }
 
     @Override
@@ -181,44 +211,6 @@ public class SurveyActivity extends AppCompatActivity {
     }
 
     /**
-     * API call to fetch survey questions from Cloud-Cherry server
-     */
-    void getQuestions() {
-        mProgressLoading.setVisibility(View.VISIBLE);
-        Call<SurveyResponse> aCall = SurveyClient.get().getQuestions(SurveyCC.mSurveyToken, "1234");
-        aCall.enqueue(new Callback<SurveyResponse>() {
-            @Override
-            public void onResponse(Call<SurveyResponse> call, Response<SurveyResponse> response) {
-                try {
-                    mProgressLoading.setVisibility(View.GONE);
-                    if (response != null)
-                        if (response.body() != null) {
-                            mSurveyResponse = response.body();
-                            filterQuestions(mSurveyResponse);
-                            setConfigFromResponse(mSurveyResponse);
-                            if (SurveyCC.getInstance().isShowWelcomeMessage())
-                                replaceFragment(new WelcomeFragment());
-                            else
-                                replaceFragment(new MultiPageFragment());
-                        }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<SurveyResponse> call, Throwable t) {
-                try {
-                    mProgressLoading.setVisibility(View.GONE);
-                    Toast.makeText(SurveyActivity.this, R.string.toast_failed_general, Toast.LENGTH_SHORT).show();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-    }
-
-    /**
      * Sets config parameters based on API response
      *
      * @param iSurveyResponse response data from server
@@ -234,9 +226,7 @@ public class SurveyActivity extends AppCompatActivity {
                 .showWelcomeMessage(!iSurveyResponse.skipWelcome)
                 .showThankYouMessage(true)
                 .build();
-
         SurveyCC.getInstance().setConfigFromWeb(aHeaderConfig);
-//        setAppLogo();
     }
 
     /**
@@ -253,70 +243,296 @@ public class SurveyActivity extends AppCompatActivity {
 
     void filterQuestions(SurveyResponse iResponse) {
         mSurveyQuestions.clear();
-        for (SurveyQuestions aQuestion : iResponse.questions) {
-            if (!aQuestion.isRetired && (aQuestion.displayType.equals("Scale") || aQuestion.displayType.equals("MultilineText"))) {
-                mSurveyQuestions.add(aQuestion);
+        mSurveyQuestions.addAll(QuestionFilterHelper.getFilteredQuestions(iResponse));
+    }
+
+    /**
+     * API call to submit answers
+     */
+    public void submitAnswers() {
+        final ProgressDialog aProgressDialog = new ProgressDialog(SurveyActivity.this);
+        aProgressDialog.setTitle("Submitting survey");
+        aProgressDialog.setMessage("Please wait...");
+        aProgressDialog.setCancelable(false);
+        aProgressDialog.show();
+        Call<ResponseBody> aCall = SurveyClient.get().postAnswerAll(SurveyCC.getInstance().getSurveyToken(), RecordAnswer.getInstance().getAnswers());
+        aCall.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                try {
+                    aProgressDialog.dismiss();
+                    finishSurvey();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
-        }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                try {
+                    aProgressDialog.dismiss();
+                    if (aAlertDialog != null) {
+                        aAlertDialog.cancel();
+                    }
+                    showAlertRetryCallback(RETRY_SUBMIT, getString(R.string.alert_message_survey_submit_failed), SurveyActivity.this);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
-    public void submitAnswers(final AlertDialog aAlert) {
-        if(RecordAnswer.getInstance().mAnswers.size() > 0) {
-            final ProgressDialog aProgressDialog = new ProgressDialog(SurveyActivity.this);
-            aProgressDialog.setTitle("Submitting survey");
-            aProgressDialog.setMessage("Please wait...");
-            aProgressDialog.setCancelable(false);
+    /**
+     * API call to submit partial answers
+     *
+     * @param isLastPage boolean to check if view pager is on last page
+     * @param iAnswer    array list of answer object as per API documentation
+     */
+    public void submitAnswerPartial(final boolean isLastPage, ArrayList<Answer> iAnswer) {
+        final ProgressDialog aProgressDialog = new ProgressDialog(SurveyActivity.this);
+        aProgressDialog.setTitle("Submitting survey");
+        aProgressDialog.setMessage("Please wait...");
+        aProgressDialog.setCancelable(false);
+        if (isLastPage)
             aProgressDialog.show();
-            Call<ResponseBody> aCall = SurveyClient.get().postAnswerAll(SurveyCC.mSurveyToken, RecordAnswer.getInstance().getAnswers());
-            aCall.enqueue(new Callback<ResponseBody>() {
-                @Override
-                public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-                    try {
-                        aProgressDialog.dismiss();
-                        finishSurvey(aAlert);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+        Call<ResponseBody> aCall = SurveyClient.get().postAnswerPartial(SurveyCC.getInstance().getPartialResponseId(), isLastPage ? true : false, iAnswer);
+        aCall.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                try {
+                    aProgressDialog.dismiss();
+                    if (isLastPage)
+                        finishSurvey();
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
+            }
 
-                @Override
-                public void onFailure(Call<ResponseBody> call, Throwable t) {
-                    try {
-                        aProgressDialog.dismiss();
-                        if (aAlert != null) {
-                            aAlert.cancel();
-                        }
-                        showAlertRetryCallback(getString(R.string.alert_message_survey_submit_failed), SurveyActivity.this, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
-                                submitAnswers(null);
-                            }
-                        });
-                    } catch (Exception e) {
-                        e.printStackTrace();
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                try {
+                    aProgressDialog.dismiss();
+                    if (aAlertDialog != null) {
+                        aAlertDialog.cancel();
                     }
+                    if (isLastPage)
+                        showAlertRetryCallback(RETRY_SUBMIT, getString(R.string.alert_message_survey_submit_failed), SurveyActivity.this);
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-            });
-        }else{
-            finishSurvey(aAlert);
+            }
+        });
+    }
+
+    /**
+     * Moves viewpager page to the next item or finishes the survey
+     */
+    public void moveOrSubmit() {
+        if (getCurrentFragment() instanceof MultiPageFragment) {
+            nextPage();
+        } else {
+            finishSurvey();
         }
     }
 
-    void finishSurvey(AlertDialog aAlert){
-        if (aAlert != null) {
-            aAlert.cancel();
+    /**
+     * Method to reset all saved data and show thank you screen
+     */
+    void finishSurvey() {
+        if (aAlertDialog != null) {
+            aAlertDialog.cancel();
         }
         RecordAnswer.getInstance().reset();
         replaceFragment(new ThanksFragment());
     }
 
-    public void showAlertRetryCallback(String iMessage, Context iContext, DialogInterface.OnClickListener iYesListener) {
+    /**
+     * Handles display of next page or submitting answer based on certain criteria
+     */
+    void nextPage() {
+        boolean aIsLastPage = mIsLastPage;
+        if (!aIsLastPage) {
+            getMultiPageViewPager().setCurrentItem(mCurrentPage + 1);
+        } else {
+            if (!SurveyCC.getInstance().isPartialCapturing()) {
+                submitAnswers();
+            }
+        }
+    }
+
+    /**
+     * Shows alert dialog to retry if any of the APIs fail to respond
+     *
+     * @param iWhich   which API to call integer constant
+     * @param iMessage message to be shown
+     * @param iContext Activity context
+     */
+    public void showAlertRetryCallback(final int iWhich, String iMessage, Context iContext) {
         AlertDialog dialog = new AlertDialog.Builder(iContext).create();
         dialog.setTitle(iContext.getString(R.string.alert_title_alert));
         dialog.setMessage(iMessage);
         dialog.setCancelable(false);
-        dialog.setButton(AlertDialog.BUTTON_POSITIVE, iContext.getString(R.string.alert_retry), iYesListener);
-
+        dialog.setButton(AlertDialog.BUTTON_POSITIVE, iContext.getString(R.string.alert_retry), new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                switch (iWhich) {
+                    case RETRY_SUBMIT:
+                        if (SurveyCC.getInstance().isPartialCapturing()) {
+                            finishSurvey();
+                        } else {
+                            submitAnswers();
+                        }
+                        break;
+                    case RETRY_LOGIN:
+                        createTokenAndGetQuestions();
+                        break;
+                    case RETRY_CREATE_TOKEN:
+                        createNewSurveyToken();
+                        break;
+                    case RETRY_QUESTIONS:
+                        getQuestions();
+                        break;
+                }
+            }
+        });
         dialog.show();
+    }
+
+    void showProgressBar() {
+        if (mProgressLoading != null)
+            mProgressLoading.setVisibility(View.VISIBLE);
+    }
+
+    void hideProgressBar() {
+        if (mProgressLoading != null)
+            mProgressLoading.setVisibility(View.GONE);
+    }
+
+
+    /**
+     * API call to authenticate user and creates new survey token to fetch question list
+     */
+    void createTokenAndGetQuestions() {
+        showProgressBar();
+        Call<LoginToken> aCall = SurveyClient.get().login(Constants.GRANT_TYPE, SurveyCC.getInstance().getUserName(), SurveyCC.getInstance().getPassword());
+        aCall.enqueue(new Callback<LoginToken>() {
+            @Override
+            public void onResponse(Call<LoginToken> call, Response<LoginToken> response) {
+                try {
+                    if (response != null && response.body() != null && response.isSuccessful()) {
+                        CCPreferences.getInstance(SurveyCC.getInstance().getContext()).setUserDetail(response.body());
+                        createNewSurveyToken();
+                    }
+                } catch (Exception e) {
+                    Constants.logWarn("createTokenAndGetQuestions", e.getMessage());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<LoginToken> call, Throwable t) {
+                try {
+                    hideProgressBar();
+                    showAlertRetryCallback(RETRY_LOGIN, getString(R.string.toast_failed_general), SurveyActivity.this);
+                    Constants.logWarn("createTokenAndGetQuestions onFailure", t.getMessage());
+                } catch (Exception e) {
+                    Constants.logWarn("createTokenAndGetQuestions onFailure", e.getMessage());
+                }
+            }
+        });
+
+    }
+
+    /**
+     * API call to create new Survey Token
+     */
+    void createNewSurveyToken() {
+        showProgressBar();
+        Call<SurveyToken> aCall = SurveyClient.get().createSurveyToken(new SurveyToken(1));
+        aCall.enqueue(new Callback<SurveyToken>() {
+            @Override
+            public void onResponse(Call<SurveyToken> call, Response<SurveyToken> response) {
+                try {
+                    if (response != null && response.body() != null && response.isSuccessful()) {
+                        SurveyCC.getInstance().setSurveyToken(response.body().id);
+                        getQuestions();
+                    }
+                } catch (Exception e) {
+                    Constants.logWarn("createNewSurveyToken onResponse", e.getMessage());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<SurveyToken> call, Throwable t) {
+                try {
+                    hideProgressBar();
+                    showAlertRetryCallback(RETRY_CREATE_TOKEN, getString(R.string.toast_failed_general), SurveyActivity.this);
+                    Constants.logWarn("createNewSurveyToken onFailure", t.getMessage());
+                } catch (Exception e) {
+                    Constants.logWarn("createNewSurveyToken onFailure", e.getMessage());
+                }
+            }
+        });
+    }
+
+    /**
+     * API call to fetch survey questions from Cloud-Cherry server
+     */
+    void getQuestions() {
+        showProgressBar();
+        Call<SurveyResponse> aCall = SurveyClient.get().getQuestions(SurveyCC.getInstance().getSurveyToken(), "1234");
+        aCall.enqueue(new Callback<SurveyResponse>() {
+            @Override
+            public void onResponse(Call<SurveyResponse> call, Response<SurveyResponse> response) {
+                try {
+                    hideProgressBar();
+                    if (response != null && response.body() != null)
+                        handleSurveyResponse(response.body());
+                } catch (Exception e) {
+                    Constants.logInfo("getQuestions onResponse", e.getMessage());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<SurveyResponse> call, Throwable t) {
+                try {
+                    Constants.logInfo("getQuestions onFailure", t.getMessage());
+                    hideProgressBar();
+                    showAlertRetryCallback(RETRY_QUESTIONS, getString(R.string.toast_failed_general), SurveyActivity.this);
+                } catch (Exception e) {
+                    Constants.logInfo("getQuestions onFailure", e.getMessage());
+                }
+            }
+        });
+    }
+
+    /**
+     * Handles survey response from API call
+     *
+     * @param iResponse SurveyResponse object from server
+     */
+    void handleSurveyResponse(SurveyResponse iResponse) {
+        SurveyCC.getInstance().setSurveyResponse(iResponse);
+        filterQuestions(iResponse);
+        setConfigFromResponse(iResponse);
+        if (SurveyCC.getInstance().isShowWelcomeMessage()) {
+            replaceFragment(new WelcomeFragment());
+        } else {
+            replaceFragment(new MultiPageFragment());
+        }
+    }
+
+    /**
+     * Shows toast message
+     *
+     * @param iMessage message to show
+     */
+    void showToastMessage(int iMessage) {
+        Toast.makeText(SurveyActivity.this, iMessage, Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onQuestionDisplayed(SurveyQuestions iQuestion, int iPosition, boolean isLastPage) {
+        mCurrentPage = iPosition;
+        mIsLastPage = isLastPage;
     }
 }

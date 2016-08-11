@@ -36,10 +36,11 @@ import java.util.Map;
 public class MultiPageFragment extends Fragment implements View.OnClickListener {
     public CustomViewPager mViewPager;
     public static final String EXTRAS_QUESTION = "question";
+    public static final String EXTRAS_POSITION = "position";
     private Button mBNext, mBPrevious;
     private TextView mTVPage;
     private LinearLayout mFooterLayout;
-    private boolean mIsLastPage;
+    public boolean mIsLastPage;
     private boolean mIsFirstPage;
     private int mCurrentPosition = 0;
     private PagerAdapter mAdapter;
@@ -86,6 +87,7 @@ public class MultiPageFragment extends Fragment implements View.OnClickListener 
                     mIsLastPage = false;
                 }
                 handleFooterButtons();
+                SurveyCC.getInstance().sendFragmentData(((SurveyActivity) getActivity()).mSurveyQuestions.get(mCurrentPosition), mCurrentPosition, mIsLastPage);
             }
 
             @Override
@@ -125,18 +127,15 @@ public class MultiPageFragment extends Fragment implements View.OnClickListener 
         }
         String aPage = String.valueOf(mCurrentPosition + 1) + "/" + (((SurveyActivity) getActivity()).mSurveyQuestions.size());
         mTVPage.setText(aPage);
+        SurveyCC.getInstance().sendFragmentData(((SurveyActivity) getActivity()).mSurveyQuestions.get(mCurrentPosition), mCurrentPosition, mIsLastPage);
     }
 
     @Override
     public void onClick(View view) {
         int i = view.getId();
         if (i == R.id.bNext) {
-            if (!mIsLastPage) {
-                if (validate())
-                    mViewPager.setCurrentItem(mCurrentPosition + 1);
-            } else {
-                if (validate())
-                    ((SurveyActivity) getActivity()).submitAnswers(null);
+            if (validate()) {
+                ((SurveyActivity) getActivity()).moveOrSubmit();
             }
         } else if (i == R.id.bPrevious) {
             if (!mIsFirstPage) {
@@ -196,6 +195,7 @@ public class MultiPageFragment extends Fragment implements View.OnClickListener 
             Fragment aFragment = null;
             Bundle aBundle = new Bundle();
             aBundle.putParcelable(EXTRAS_QUESTION, mQuestions.get(position));
+            aBundle.putInt(EXTRAS_POSITION, position);
             if (mFragments.get(mQuestions.get(position).id) == null && mQuestions.get(position).displayType.equals("Scale")) {
                 aFragment = new QuestionNPSFragment();
                 aFragment.setArguments(aBundle);
@@ -220,7 +220,8 @@ public class MultiPageFragment extends Fragment implements View.OnClickListener 
 
     }
 
-    /** This method calls the respective validateAnswer() method of a fragment
+    /**
+     * This method calls the respective validateAnswer() method of a fragment
      *
      * @return true or false
      */

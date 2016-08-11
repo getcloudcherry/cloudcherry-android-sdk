@@ -18,4 +18,5 @@ public class SurveyResponse {
     public ArrayList<SurveyQuestions> questions;
     public boolean skipWelcome;
     public String disclaimerText;
+    public String partialResponseId;
 }

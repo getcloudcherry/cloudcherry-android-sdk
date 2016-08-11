@@ -1,8 +1,10 @@
 package com.getcloudcherry.survey.helper;
 
-import com.getcloudcherry.survey.model.SurveyAnswers;
+import android.util.Log;
+
 import com.getcloudcherry.survey.httpclient.APIHelper;
 import com.getcloudcherry.survey.model.Answer;
+import com.getcloudcherry.survey.model.SurveyAnswers;
 import com.getcloudcherry.survey.model.SurveyQuestions;
 
 import java.util.ArrayList;
@@ -11,14 +13,22 @@ import java.util.Map;
 
 /**
  * Created by riteshdubey on 8/4/16.
+ * Helper Singleton class to capture survey answers
  */
 public class RecordAnswer {
     public static RecordAnswer mInstance;
     public SurveyAnswers mSurveyAnswer;
-    public long mTotalDuration = 0;
     public long mStartTime = 0;
+    // Used for storing survey that has been answered
     public Map<String, Answer> mAnswers = new HashMap<>();
+    // Used for storing pre-fill objects
+    public Map<String, Object> mPreFillAnswers = new HashMap<>();
 
+    /**
+     * Gets the singleton instance of this class
+     *
+     * @return
+     */
     public static RecordAnswer getInstance() {
         if (mInstance == null) {
             mInstance = new RecordAnswer();
@@ -26,14 +36,54 @@ public class RecordAnswer {
         return mInstance;
     }
 
+    /**
+     * Initializes the start time of the survey
+     *
+     * @param iStartTime time in milliseconds
+     */
     public void startedAt(long iStartTime) {
         mStartTime = iStartTime;
     }
 
+    /**
+     * Saves answer to a particular question
+     *
+     * @param iQuestion SurveyQuestion object
+     * @param iAnswer   answer string
+     */
     public void recordAnswer(SurveyQuestions iQuestion, String iAnswer) {
-        mAnswers.put(iQuestion.id, new Answer(iQuestion.id, iQuestion.text, iAnswer, 0));
+        mAnswers.put(iQuestion.id, new Answer(iQuestion.id, iQuestion.text, iAnswer));
     }
 
+    /**
+     * Saves answer to a particular question
+     *
+     * @param iQuestion SurveyQuestion object
+     * @param iAnswer   answer value in integer
+     */
+    public void recordAnswer(SurveyQuestions iQuestion, int iAnswer) {
+        mAnswers.put(iQuestion.id, new Answer(iQuestion.id, iQuestion.text, iAnswer));
+    }
+
+    /**
+     * Saves answer to a particular question
+     *
+     * @param iQuestionId question id
+     * @param iAnswer     answer object
+     */
+    public void recordAnswer(String iQuestionId, Answer iAnswer) {
+        mAnswers.put(iQuestionId, iAnswer);
+    }
+
+    public void preFillQuestionWithTags(HashMap<String, Object> iPreFill) {
+        mPreFillAnswers = iPreFill;
+    }
+
+    /**
+     * Gets the Answer object to be sent to server
+     *
+     * @return SurveyAnswers instance
+     */
     public SurveyAnswers getAnswers() {
         if (mSurveyAnswer == null)
             mSurveyAnswer = new SurveyAnswers();
@@ -44,8 +94,61 @@ public class RecordAnswer {
         return mSurveyAnswer;
     }
 
-    public void reset(){
-        mAnswers.clear();
-        mSurveyAnswer = null;
+
+    /**
+     * Gets the saved answer array object
+     *
+     * @return
+     */
+    public ArrayList<Answer> getSavedAnswerList() {
+        return new ArrayList<Answer>(mAnswers.values());
     }
+
+    /**
+     * Gets the saved answer array object for particular question id as needed by the partialResponse API
+     *
+     * @param iQuestionId question id
+     * @return
+     */
+    public ArrayList<Answer> getSavedAnswerForQuestionId(String iQuestionId) {
+        ArrayList<Answer> aAnswer = new ArrayList<>();
+        if (mAnswers.get(iQuestionId) != null)
+            aAnswer.add(mAnswers.get(iQuestionId));
+        return aAnswer;
+    }
+
+    /**
+     * Compare questionTags against the pre-fill tag and record answers
+     *
+     * @param iQuestion SurveyQuestion object
+     * @return
+     */
+    public boolean checkIfPreFillExists(SurveyQuestions iQuestion) {
+
+        for (String aTag : iQuestion.questionTags) {
+            if (mPreFillAnswers.get(aTag) != null) {
+                Object aAnswerObject = mPreFillAnswers.get(aTag);
+                if (aAnswerObject instanceof String) {
+                    Log.i("Pre-fill question", iQuestion.text + " : " + aAnswerObject.toString());
+                    recordAnswer(iQuestion, (String) aAnswerObject);
+                } else if (aAnswerObject instanceof Integer) {
+                    Log.i("Pre-fill question", iQuestion.text + " : " + aAnswerObject.toString());
+                    recordAnswer(iQuestion, (Integer) aAnswerObject);
+                }
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Resets the answer object
+     */
+    public void reset() {
+        mAnswers.clear();
+        mPreFillAnswers.clear();
+        mStartTime = 0;
+    }
+
 }
