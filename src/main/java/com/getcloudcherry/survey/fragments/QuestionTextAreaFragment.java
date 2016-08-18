@@ -87,15 +87,11 @@ public class QuestionTextAreaFragment extends Fragment {
                 submitPartial();
             }
         } else {
+            RecordAnswer.getInstance().recordAnswer(mQuestion, mETAnswer.getText().toString().trim());
             // If partial response is enabled then capture
             if (SurveyCC.getInstance().isPartialCapturing()) {
                 submitPartial();
-            } else {
-                //Don't capture empty answers
-                if (mETAnswer.getText().toString().trim().length() != 0)
-                    RecordAnswer.getInstance().recordAnswer(mQuestion, mETAnswer.getText().toString().trim());
             }
-
         }
         return true;
     }
@@ -104,10 +100,8 @@ public class QuestionTextAreaFragment extends Fragment {
      * Contains logic to call the Partial response API to submit partial response
      */
     void submitPartial() {
-        ArrayList<Answer> aAnswers = new ArrayList<>();
-        aAnswers.add(new Answer(mQuestion.id, mQuestion.text, mETAnswer.getText().toString().trim()));
         if (SurveyCC.getInstance().isPartialCapturing()) {
-            ((SurveyActivity) getActivity()).submitAnswerPartial(isLastPage, aAnswers);
+            ((SurveyActivity) getActivity()).submitAnswerPartial(isLastPage, RecordAnswer.getInstance().getPartialAnswerForQuestionId(mQuestion.id));
         }
     }
 

@@ -19,4 +19,6 @@
     <string name="alert_title_alert">Alert</string>
     <string name="alert_message_survey_submit_failed">Failed to submit survey. Please try again.</string>
     <string name="close">CLOSE</string>
+    <string name="alert_title_submit_survey">Submitting survey</string>
+    <string name="please_wait">Please wait...</string>
 </resources>

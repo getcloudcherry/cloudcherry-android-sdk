@@ -168,11 +168,7 @@ public class SurveyActivity extends AppCompatActivity implements FragmentCallBac
                     public void onClick(View v) {
                         if (RecordAnswer.getInstance().mAnswers.size() > 0) {
                             aAlertDialog.cancel();
-                            if (!SurveyCC.getInstance().isPartialCapturing()) {
-                                submitAnswers();
-                            } else {
-                                finishSurvey();
-                            }
+                            submitAnswers();
                         } else {
                             finishSurvey();
                         }
@@ -251,8 +247,8 @@ public class SurveyActivity extends AppCompatActivity implements FragmentCallBac
      */
     public void submitAnswers() {
         final ProgressDialog aProgressDialog = new ProgressDialog(SurveyActivity.this);
-        aProgressDialog.setTitle("Submitting survey");
-        aProgressDialog.setMessage("Please wait...");
+        aProgressDialog.setTitle(getString(R.string.alert_title_submit_survey));
+        aProgressDialog.setMessage(getString(R.string.please_wait));
         aProgressDialog.setCancelable(false);
         aProgressDialog.show();
         Call<ResponseBody> aCall = SurveyClient.get().postAnswerAll(SurveyCC.getInstance().getSurveyToken(), RecordAnswer.getInstance().getAnswers());
@@ -289,20 +285,13 @@ public class SurveyActivity extends AppCompatActivity implements FragmentCallBac
      * @param iAnswer    array list of answer object as per API documentation
      */
     public void submitAnswerPartial(final boolean isLastPage, ArrayList<Answer> iAnswer) {
-        final ProgressDialog aProgressDialog = new ProgressDialog(SurveyActivity.this);
-        aProgressDialog.setTitle("Submitting survey");
-        aProgressDialog.setMessage("Please wait...");
-        aProgressDialog.setCancelable(false);
-        if (isLastPage)
-            aProgressDialog.show();
-        Call<ResponseBody> aCall = SurveyClient.get().postAnswerPartial(SurveyCC.getInstance().getPartialResponseId(), isLastPage ? true : false, iAnswer);
+        Call<ResponseBody> aCall = SurveyClient.get().postAnswerPartial(SurveyCC.getInstance().getPartialResponseId(), isLastPage, iAnswer);
         aCall.enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
                 try {
-                    aProgressDialog.dismiss();
-                    if (isLastPage)
-                        finishSurvey();
+//                    if (isLastPage)
+//                        finishSurvey();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -311,12 +300,11 @@ public class SurveyActivity extends AppCompatActivity implements FragmentCallBac
             @Override
             public void onFailure(Call<ResponseBody> call, Throwable t) {
                 try {
-                    aProgressDialog.dismiss();
                     if (aAlertDialog != null) {
                         aAlertDialog.cancel();
                     }
-                    if (isLastPage)
-                        showAlertRetryCallback(RETRY_SUBMIT, getString(R.string.alert_message_survey_submit_failed), SurveyActivity.this);
+//                    if (isLastPage)
+//                        showAlertRetryCallback(RETRY_SUBMIT, getString(R.string.alert_message_survey_submit_failed), SurveyActivity.this);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -354,9 +342,9 @@ public class SurveyActivity extends AppCompatActivity implements FragmentCallBac
         if (!aIsLastPage) {
             getMultiPageViewPager().setCurrentItem(mCurrentPage + 1);
         } else {
-            if (!SurveyCC.getInstance().isPartialCapturing()) {
-                submitAnswers();
-            }
+//            if (!SurveyCC.getInstance().isPartialCapturing()) {
+            submitAnswers();
+//            }
         }
     }
 
@@ -377,11 +365,7 @@ public class SurveyActivity extends AppCompatActivity implements FragmentCallBac
             public void onClick(DialogInterface dialogInterface, int i) {
                 switch (iWhich) {
                     case RETRY_SUBMIT:
-                        if (SurveyCC.getInstance().isPartialCapturing()) {
-                            finishSurvey();
-                        } else {
-                            submitAnswers();
-                        }
+                        submitAnswers();
                         break;
                     case RETRY_LOGIN:
                         createTokenAndGetQuestions();

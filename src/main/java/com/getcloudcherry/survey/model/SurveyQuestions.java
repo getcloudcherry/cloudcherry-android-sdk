@@ -19,6 +19,7 @@ public class SurveyQuestions implements Parcelable {
     public ArrayList<String> multiSelect;
     public ArrayList<String> multiSelectChoiceTag;
     public boolean staffFill;
+    public boolean apiFill;
     public boolean endOfSurvey;
     public String endOfSurveyMessage;
     public boolean isRequired;

@@ -31,7 +31,7 @@ public class QuestionFilterHelper {
         ArrayList<SurveyQuestions> aFilteredQuestions = new ArrayList<>();
         for (SurveyQuestions aQuestion : iResponse.questions) {
             if (QuestionTypes.isSupportedQuestion(aQuestion) && !aQuestion.isRetired) {
-                if (!RecordAnswer.getInstance().checkIfPreFillExists(aQuestion)){
+                if (!RecordAnswer.getInstance().checkIfPreFillExists(aQuestion) && !aQuestion.staffFill && !aQuestion.apiFill){
                     Log.i("Filtered Question", aQuestion.toString());
                     aFilteredQuestions.add(aQuestion);
                 }

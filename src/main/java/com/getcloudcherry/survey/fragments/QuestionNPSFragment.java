@@ -186,13 +186,8 @@ public class QuestionNPSFragment extends Fragment implements RadioGroup.OnChecke
      * Contains logic to call the Partial response API to submit partial response
      */
     void submitPartial() {
-        ArrayList<Answer> aAnswers = new ArrayList<>();
-        if (isNPS)
-            aAnswers.add(new Answer(mQuestion.id, mQuestion.text, !TextUtils.isEmpty(mAnswer) ? Integer.parseInt(mAnswer) : null));
-        else
-            aAnswers.add(new Answer(mQuestion.id, mQuestion.text, mAnswer));
         if (SurveyCC.getInstance().isPartialCapturing()) {
-            ((SurveyActivity) getActivity()).submitAnswerPartial(isLastPage, aAnswers);
+            ((SurveyActivity) getActivity()).submitAnswerPartial(isLastPage, RecordAnswer.getInstance().getPartialAnswerForQuestionId(mQuestion.id));
         }
     }
 
