@@ -17,10 +17,7 @@ import com.getcloudcherry.survey.R;
 import com.getcloudcherry.survey.SurveyActivity;
 import com.getcloudcherry.survey.helper.RecordAnswer;
 import com.getcloudcherry.survey.helper.SurveyCC;
-import com.getcloudcherry.survey.model.Answer;
 import com.getcloudcherry.survey.model.SurveyQuestions;
-
-import java.util.ArrayList;
 
 
 /**
@@ -101,7 +98,9 @@ public class QuestionTextAreaFragment extends Fragment {
      */
     void submitPartial() {
         if (SurveyCC.getInstance().isPartialCapturing()) {
-            ((SurveyActivity) getActivity()).submitAnswerPartial(isLastPage, RecordAnswer.getInstance().getPartialAnswerForQuestionId(mQuestion.id));
+            if (RecordAnswer.getInstance().getPartialAnswerForQuestionId(mQuestion.id).size() > 0)
+                ((SurveyActivity) getActivity()).submitAnswerPartial(isLastPage, RecordAnswer.getInstance().getPartialAnswerForQuestionId(mQuestion.id));
+
         }
     }
 

@@ -25,11 +25,7 @@ import com.getcloudcherry.survey.R;
 import com.getcloudcherry.survey.SurveyActivity;
 import com.getcloudcherry.survey.helper.RecordAnswer;
 import com.getcloudcherry.survey.helper.SurveyCC;
-import com.getcloudcherry.survey.model.Answer;
-import com.getcloudcherry.survey.model.SurveyAnswers;
 import com.getcloudcherry.survey.model.SurveyQuestions;
-
-import java.util.ArrayList;
 
 
 /**
@@ -39,7 +35,7 @@ public class QuestionNPSFragment extends Fragment implements RadioGroup.OnChecke
     private RadioGroup mRadioGroup;
     private SurveyQuestions mQuestion;
     private TextView mTVTitle;
-    private LinearLayout mQuestionHeaderLayout;
+    private LinearLayout mQuestionHeaderLayout, mLegendLayout;
     private int mMin;
     private int mMax;
     private String mAnswer;
@@ -66,6 +62,7 @@ public class QuestionNPSFragment extends Fragment implements RadioGroup.OnChecke
         mQuestionHeaderLayout = (LinearLayout) view.findViewById(R.id.linearHeader);
         mTVTitle = (TextView) view.findViewById(R.id.tvTitle);
         mRadioGroup = (RadioGroup) view.findViewById(R.id.rbgRating);
+        mLegendLayout = (LinearLayout)view.findViewById(R.id.linearLegends);
         initializeViewsWithConfig();
         mRadioGroup.setOnCheckedChangeListener(this);
         createScale();
@@ -76,6 +73,7 @@ public class QuestionNPSFragment extends Fragment implements RadioGroup.OnChecke
      * Dynamically generate custom scale view based on the min and max attributes
      */
     private void createScale() {
+        mLegendLayout.setVisibility(isNPS ? View.VISIBLE : View.GONE);
         if (mQuestion.multiSelect != null && !TextUtils.isEmpty(mQuestion.multiSelect.get(0))) {
             String[] aLimit = mQuestion.multiSelect.get(0).split("-");
             if (aLimit.length > 0) {
@@ -93,7 +91,7 @@ public class QuestionNPSFragment extends Fragment implements RadioGroup.OnChecke
                     }
                     aRadio.setButtonDrawable(android.R.color.transparent);
                     aRadio.setGravity(Gravity.CENTER);
-                    aRadio.setLayoutParams(new RadioGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+                    aRadio.setLayoutParams(new RadioGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
                     aRadio.setTextColor(ContextCompat.getColorStateList(getActivity(), R.color.nps_text_state));
                     mRadioGroup.addView(aRadio);
                 }
@@ -208,7 +206,8 @@ public class QuestionNPSFragment extends Fragment implements RadioGroup.OnChecke
         if (aBundle != null) {
             mQuestion = aBundle.getParcelable(MultiPageFragment.EXTRAS_QUESTION);
             mCurrentPosition = aBundle.getInt(MultiPageFragment.EXTRAS_POSITION);
-            isNPS = mQuestion.questionTags.contains(TAG_TYPE);
+            if (mQuestion.questionTags != null)
+                isNPS = mQuestion.questionTags.contains(TAG_TYPE);
             isLastPage = (mCurrentPosition == (SurveyCC.getInstance().getSurveyQuestions().size() - 1));
         }
     }

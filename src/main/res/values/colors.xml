@@ -16,6 +16,11 @@
     <color name="color_rating_8">#F2F21D</color>
     <color name="color_rating_9">#77F21D</color>
     <color name="color_rating_10">#3F9D46</color>
+    <color name="color_legend_1">#E40021</color>
+    <color name="color_legend_2">#D4F419</color>
+    <color name="color_legend_3">#348F36</color>
+
+
 
     <color name="color_background">#D8242E</color>
     <color name="color_background_dark">#B12229</color>

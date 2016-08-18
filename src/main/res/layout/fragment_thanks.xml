@@ -37,15 +37,15 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:text="Customer Delight powered by "
+            android:visibility="gone"
+            android:text="@string/customer_delight_powered_by"
             android:textColor="@android:color/black" />
 
         <ImageView
             android:id="@+id/ivFooterLogo"
             android:layout_width="@dimen/margin_120"
-            android:layout_height="wrap_content"
-            android:adjustViewBounds="true"
-            android:src="@drawable/logo_footer" />
+            android:layout_height="40dp"
+            android:adjustViewBounds="true" />
 
     </LinearLayout>
 </RelativeLayout>
