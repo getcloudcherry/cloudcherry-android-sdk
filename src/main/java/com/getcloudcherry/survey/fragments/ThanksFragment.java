@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,7 +12,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.getcloudcherry.survey.R;
-import com.getcloudcherry.survey.SurveyActivity;
 import com.getcloudcherry.survey.helper.SurveyCC;
 
 
@@ -42,13 +40,6 @@ public class ThanksFragment extends Fragment implements View.OnClickListener {
         mBContinue = (Button) view.findViewById(R.id.bThanks);
         mBContinue.setOnClickListener(this);
         setThanksMessage(SurveyCC.getInstance().getThanksMessage());
-        if (!TextUtils.isEmpty(SurveyCC.getInstance().getHeaderActionBarLogo())) {
-            mTVFooterText.setVisibility(View.GONE);
-            ((SurveyActivity) getActivity()).ION.build(SurveyCC.getInstance().getContext()).load(SurveyCC.getInstance().getHeaderActionBarLogo()).withBitmap().fadeIn(true).error(0).placeholder(0).intoImageView(mImageFooterLogo);
-        } else {
-            mTVFooterText.setVisibility(View.VISIBLE);
-            mImageFooterLogo.setImageResource(R.drawable.logo_footer);
-        }
     }
 
     void setThanksMessage(String iMessage) {

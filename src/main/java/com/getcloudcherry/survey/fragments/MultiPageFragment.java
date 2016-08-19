@@ -15,6 +15,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -44,6 +45,7 @@ public class MultiPageFragment extends Fragment implements View.OnClickListener 
     private boolean mIsFirstPage;
     private int mCurrentPosition = 0;
     private PagerAdapter mAdapter;
+    private ImageView mIVBrandLogo;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -60,6 +62,7 @@ public class MultiPageFragment extends Fragment implements View.OnClickListener 
         super.onViewCreated(iView, savedInstanceState);
         RecordAnswer.getInstance().startedAt(System.currentTimeMillis());
         mViewPager = (CustomViewPager) iView.findViewById(R.id.viewPager);
+        mIVBrandLogo = (ImageView) iView.findViewById(R.id.ivBrandLogo);
         //Footer
         mFooterLayout = (LinearLayout) iView.findViewById(R.id.linearFooter);
         mTVPage = (TextView) iView.findViewById(R.id.tvPage);
@@ -101,6 +104,9 @@ public class MultiPageFragment extends Fragment implements View.OnClickListener 
             }
         });
         handleFooterButtons();
+        if (!TextUtils.isEmpty(SurveyCC.getInstance().getHeaderActionBarLogo())) {
+            ((SurveyActivity) getActivity()).ION.build(SurveyCC.getInstance().getContext()).load(SurveyCC.getInstance().getHeaderActionBarLogo()).withBitmap().error(0).placeholder(0).intoImageView(mIVBrandLogo);
+        }
     }
 
     /**

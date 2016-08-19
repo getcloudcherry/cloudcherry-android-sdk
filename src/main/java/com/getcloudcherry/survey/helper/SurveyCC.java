@@ -65,7 +65,7 @@ public class SurveyCC {
     public int FOOTER_BUTTON_COLOR = R.color.color_lightgrey;
     public String FOOTER_PAGE_FONT_PATH = "";
     public int FOOTER_PAGE_FONT_SIZE = 12;
-    public int FOOTER_PAGE_FONT_COLOR = android.R.color.white;
+    public int FOOTER_PAGE_FONT_COLOR = android.R.color.black;
     private SurveyResponse mSurveyResponse;
     private ArrayList<SurveyQuestions> mSurveyQuestions = new ArrayList<>();
 

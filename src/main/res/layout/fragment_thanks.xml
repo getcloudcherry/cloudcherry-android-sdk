@@ -37,14 +37,14 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:visibility="gone"
             android:text="@string/customer_delight_powered_by"
             android:textColor="@android:color/black" />
 
         <ImageView
             android:id="@+id/ivFooterLogo"
             android:layout_width="@dimen/margin_120"
-            android:layout_height="40dp"
+            android:layout_height="wrap_content"
+            android:src="@drawable/logo_footer"
             android:adjustViewBounds="true" />
 
     </LinearLayout>

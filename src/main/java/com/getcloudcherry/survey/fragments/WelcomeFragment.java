@@ -3,7 +3,6 @@ package com.getcloudcherry.survey.fragments;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -41,13 +40,6 @@ public class WelcomeFragment extends Fragment implements View.OnClickListener {
         mBYes = (Button) view.findViewById(R.id.bYes);
         mBYes.setOnClickListener(this);
         setWelcomeMessage(SurveyCC.getInstance().getWelcomeMessage());
-        if (!TextUtils.isEmpty(SurveyCC.getInstance().getHeaderActionBarLogo())) {
-            mTVFooterText.setVisibility(View.GONE);
-            ((SurveyActivity) getActivity()).ION.build(SurveyCC.getInstance().getContext()).load(SurveyCC.getInstance().getHeaderActionBarLogo()).withBitmap().fadeIn(true).error(0).placeholder(0).intoImageView(mImageFooterLogo);
-        } else {
-            mTVFooterText.setVisibility(View.VISIBLE);
-            mImageFooterLogo.setImageResource(R.drawable.logo_footer);
-        }
     }
 
     void setWelcomeMessage(String iMessage) {

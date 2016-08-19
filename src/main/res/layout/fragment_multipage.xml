@@ -27,14 +27,14 @@
             android:layout_weight="1"
             android:text="@string/previous" />
 
-        <TextView
-            android:id="@+id/tvPage"
-            android:layout_width="60dp"
+        <ImageView
+            android:id="@+id/ivBrandLogo"
+            android:layout_width="@dimen/margin_40"
             android:layout_height="wrap_content"
-            android:layout_margin="@dimen/margin_8"
             android:layout_gravity="center_vertical"
-            android:gravity="center"
-            android:text=""/>
+            android:layout_marginLeft="@dimen/margin_4"
+            android:layout_marginRight="@dimen/margin_4"
+            android:adjustViewBounds="true" />
 
         <Button
             android:id="@+id/bNext"
@@ -44,5 +44,18 @@
             android:layout_weight="1"
             android:text="@string/next" />
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/tvPage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:paddingLeft="@dimen/margin_8"
+        android:paddingRight="@dimen/margin_8"
+        android:gravity="center"
+        android:text=""
+        android:layout_above="@+id/linearFooter"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true" />
 
 </RelativeLayout>
