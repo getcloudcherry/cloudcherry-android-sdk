@@ -4,12 +4,16 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.text.TextUtils;
+import android.util.Log;
 import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -17,17 +21,19 @@ import com.getcloudcherry.survey.R;
 import com.getcloudcherry.survey.SurveyActivity;
 import com.getcloudcherry.survey.helper.RecordAnswer;
 import com.getcloudcherry.survey.helper.SurveyCC;
+import com.getcloudcherry.survey.helper.Utils;
 import com.getcloudcherry.survey.model.SurveyQuestions;
 
 
 /**
- * Fragment to display and handle MultilineText type question
+ * Fragment to display and handle Star rating type question
  */
-public class QuestionTextAreaFragment extends Fragment {
-    private EditText mETAnswer;
+public class QuestionSmileyRatingFragment extends Fragment implements RadioGroup.OnCheckedChangeListener {
+    private RadioGroup mRadioGroup;
     private SurveyQuestions mQuestion;
     private TextView mTVTitle;
     private LinearLayout mQuestionHeaderLayout;
+    private String mAnswer;
     private boolean isLastPage;
     private int mCurrentPosition;
 
@@ -39,17 +45,39 @@ public class QuestionTextAreaFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_textarea_question, container, false);
+        return inflater.inflate(R.layout.fragment_nps_question, container, false);
     }
 
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        //Header
         mQuestionHeaderLayout = (LinearLayout) view.findViewById(R.id.linearHeader);
         mTVTitle = (TextView) view.findViewById(R.id.tvTitle);
-        mETAnswer = (EditText) view.findViewById(R.id.etEditType);
+        mRadioGroup = (RadioGroup) view.findViewById(R.id.rbgRating);
         initializeViewsWithConfig();
+        mRadioGroup.setOnCheckedChangeListener(this);
+        createSmileyRating();
         mTVTitle.setText(mQuestion.text);
+    }
+
+    /**
+     * Dynamically generate custom smiley rating view
+     */
+    private void createSmileyRating() {
+        RadioGroup.LayoutParams aParams = new RadioGroup.LayoutParams((int) Utils.convertDpToPixel(48), (int) Utils.convertDpToPixel(48));
+        aParams.setMargins((int) Utils.convertDpToPixel(5), (int) Utils.convertDpToPixel(10), (int) Utils.convertDpToPixel(5), (int) Utils.convertDpToPixel(10));
+        for (int i = 0; i < 5; i++) {
+            RadioButton aRadio = new RadioButton(getActivity());
+            aRadio.setText(getEmijoByUnicode(getEmojiUnicode(i + 1)));
+            aRadio.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24);
+            aRadio.setId(i + 1);
+            aRadio.setBackgroundResource(R.drawable.multi_select_selector);
+            aRadio.setButtonDrawable(android.R.color.transparent);
+            aRadio.setGravity(Gravity.CENTER);
+            aRadio.setLayoutParams(aParams);
+            mRadioGroup.addView(aRadio);
+        }
     }
 
     /**
@@ -57,6 +85,10 @@ public class QuestionTextAreaFragment extends Fragment {
      */
     void initializeViewsWithConfig() {
         setHeaderConfig();
+    }
+
+    public String getEmijoByUnicode(int unicode) {
+        return new String(Character.toChars(unicode));
     }
 
     /**
@@ -72,23 +104,18 @@ public class QuestionTextAreaFragment extends Fragment {
     /**
      * Method to validate if the answer has been provided by the user only when the question has isRequired = true
      *
-     * @return boolean
+     * @return true or false
      */
     public boolean validateAnswer() {
         if (mQuestion.isRequired) {
-            if (mETAnswer.getText().toString().trim().length() == 0) {
+            if (TextUtils.isEmpty(mAnswer)) {
                 showToast(getString(R.string.validate_answer));
                 return false;
             } else {
-                RecordAnswer.getInstance().recordAnswer(mQuestion, mETAnswer.getText().toString().trim());
                 submitPartial();
             }
         } else {
-            RecordAnswer.getInstance().recordAnswer(mQuestion, mETAnswer.getText().toString().trim());
-            // If partial response is enabled then capture
-            if (SurveyCC.getInstance().isPartialCapturing()) {
-                submitPartial();
-            }
+            submitPartial();
         }
         return true;
     }
@@ -98,9 +125,7 @@ public class QuestionTextAreaFragment extends Fragment {
      */
     void submitPartial() {
         if (SurveyCC.getInstance().isPartialCapturing()) {
-            if (RecordAnswer.getInstance().getPartialAnswerForQuestionId(mQuestion.id).size() > 0)
-                ((SurveyActivity) getActivity()).submitAnswerPartial(isLastPage, RecordAnswer.getInstance().getPartialAnswerForQuestionId(mQuestion.id));
-
+            ((SurveyActivity) getActivity()).submitAnswerPartial(isLastPage, RecordAnswer.getInstance().getPartialAnswerForQuestionId(mQuestion.id));
         }
     }
 
@@ -123,6 +148,29 @@ public class QuestionTextAreaFragment extends Fragment {
             mCurrentPosition = aBundle.getInt(MultiPageFragment.EXTRAS_POSITION);
             isLastPage = (mCurrentPosition == (SurveyCC.getInstance().getSurveyQuestions().size() - 1));
         }
+    }
+
+    @Override
+    public void onCheckedChanged(RadioGroup radioGroup, int i) {
+        Log.i("Radio", i + "");
+        mAnswer = String.valueOf(i);
+        RecordAnswer.getInstance().recordAnswer(mQuestion, Integer.parseInt(mAnswer));
+    }
+
+    int getEmojiUnicode(int iPosition) {
+        switch (iPosition) {
+            case 1:
+                return 0x1F620;
+            case 2:
+                return 0x1F61E;
+            case 3:
+                return 0x1F610;
+            case 4:
+                return 0x1F60A;
+            case 5:
+                return 0x1F60D;
+        }
+        return 0;
     }
 
 }

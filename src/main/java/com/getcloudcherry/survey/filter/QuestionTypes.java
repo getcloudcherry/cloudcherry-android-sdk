@@ -9,6 +9,11 @@ import com.getcloudcherry.survey.model.SurveyQuestions;
 public class QuestionTypes {
     public static final String TYPE_SCALE = "Scale";
     public static final String TYPE_MULTI_LINE_TEXT = "MultilineText";
+    public static final String TYPE_RATING_STAR = "Star-5";
+    public static final String TYPE_RATING_SMILEY = "Smile-5";
+    public static final String TYPE_MULTI_SELECT = "MultiSelect";
+    public static final String TYPE_SELECT = "Select";
+    public static final String TYPE_DROPDOWN = "Dropdown";
 
     /** Method to check is the question type is supported by the SDK
      *
@@ -20,6 +25,14 @@ public class QuestionTypes {
             case QuestionTypes.TYPE_SCALE:
                 return true;
             case QuestionTypes.TYPE_MULTI_LINE_TEXT:
+                return true;
+            case QuestionTypes.TYPE_RATING_STAR:
+                return true;
+            case QuestionTypes.TYPE_MULTI_SELECT:
+                return true;
+            case QuestionTypes.TYPE_RATING_SMILEY:
+                return true;
+            case QuestionTypes.TYPE_SELECT:
                 return true;
         }
         return false;

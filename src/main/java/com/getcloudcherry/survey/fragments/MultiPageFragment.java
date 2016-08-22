@@ -21,9 +21,11 @@ import android.widget.TextView;
 
 import com.getcloudcherry.survey.R;
 import com.getcloudcherry.survey.SurveyActivity;
-import com.getcloudcherry.survey.helper.RecordAnswer;
 import com.getcloudcherry.survey.customviews.CustomViewPager;
+import com.getcloudcherry.survey.filter.QuestionTypes;
 import com.getcloudcherry.survey.helper.FontCache;
+import com.getcloudcherry.survey.helper.RecordAnalytics;
+import com.getcloudcherry.survey.helper.RecordAnswer;
 import com.getcloudcherry.survey.helper.SurveyCC;
 import com.getcloudcherry.survey.model.SurveyQuestions;
 
@@ -46,6 +48,7 @@ public class MultiPageFragment extends Fragment implements View.OnClickListener 
     private int mCurrentPosition = 0;
     private PagerAdapter mAdapter;
     private ImageView mIVBrandLogo;
+    private int mPreviousPage = 0;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -75,6 +78,9 @@ public class MultiPageFragment extends Fragment implements View.OnClickListener 
         mBPrevious.setOnClickListener(this);
         setFooterConfig();
         setContentConfig();
+        SurveyCC.getInstance().sendFragmentData(((SurveyActivity) getActivity()).mSurveyQuestions.get(mCurrentPosition), mCurrentPosition, mIsLastPage);
+        RecordAnalytics.getInstance().end(((SurveyActivity) getActivity()).mSurveyQuestions.get(mPreviousPage));
+        RecordAnalytics.getInstance().capture(((SurveyActivity) getActivity()).mSurveyQuestions.get(mCurrentPosition));
         mViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
@@ -90,12 +96,13 @@ public class MultiPageFragment extends Fragment implements View.OnClickListener 
                     mIsLastPage = false;
                 }
                 handleFooterButtons();
-                SurveyCC.getInstance().sendFragmentData(((SurveyActivity) getActivity()).mSurveyQuestions.get(mCurrentPosition), mCurrentPosition, mIsLastPage);
             }
 
             @Override
             public void onPageSelected(int position) {
-                mCurrentPosition = position;
+                RecordAnalytics.getInstance().end(((SurveyActivity) getActivity()).mSurveyQuestions.get(mPreviousPage));
+                RecordAnalytics.getInstance().capture(((SurveyActivity) getActivity()).mSurveyQuestions.get(mCurrentPosition));
+                mPreviousPage = mCurrentPosition;
             }
 
             @Override
@@ -103,7 +110,6 @@ public class MultiPageFragment extends Fragment implements View.OnClickListener 
 
             }
         });
-        handleFooterButtons();
         if (!TextUtils.isEmpty(SurveyCC.getInstance().getHeaderActionBarLogo())) {
             ((SurveyActivity) getActivity()).ION.build(SurveyCC.getInstance().getContext()).load(SurveyCC.getInstance().getHeaderActionBarLogo()).withBitmap().error(0).placeholder(0).intoImageView(mIVBrandLogo);
         }
@@ -202,12 +208,28 @@ public class MultiPageFragment extends Fragment implements View.OnClickListener 
             Bundle aBundle = new Bundle();
             aBundle.putParcelable(EXTRAS_QUESTION, mQuestions.get(position));
             aBundle.putInt(EXTRAS_POSITION, position);
-            if (mFragments.get(mQuestions.get(position).id) == null && mQuestions.get(position).displayType.equals("Scale")) {
+            if (mFragments.get(mQuestions.get(position).id) == null && mQuestions.get(position).displayType.equals(QuestionTypes.TYPE_SCALE)) {
                 aFragment = new QuestionNPSFragment();
                 aFragment.setArguments(aBundle);
                 mFragments.put(mQuestions.get(position).id, aFragment);
-            } else if (mFragments.get(mQuestions.get(position).id) == null && mQuestions.get(position).displayType.equals("MultilineText")) {
+            } else if (mFragments.get(mQuestions.get(position).id) == null && mQuestions.get(position).displayType.equals(QuestionTypes.TYPE_MULTI_LINE_TEXT)) {
                 aFragment = new QuestionTextAreaFragment();
+                aFragment.setArguments(aBundle);
+                mFragments.put(mQuestions.get(position).id, aFragment);
+            } else if (mFragments.get(mQuestions.get(position).id) == null && mQuestions.get(position).displayType.equals(QuestionTypes.TYPE_RATING_STAR)) {
+                aFragment = new QuestionStarRatingFragment();
+                aFragment.setArguments(aBundle);
+                mFragments.put(mQuestions.get(position).id, aFragment);
+            } else if (mFragments.get(mQuestions.get(position).id) == null && mQuestions.get(position).displayType.equals(QuestionTypes.TYPE_MULTI_SELECT)) {
+                aFragment = new QuestionMultiselectFragment();
+                aFragment.setArguments(aBundle);
+                mFragments.put(mQuestions.get(position).id, aFragment);
+            } else if (mFragments.get(mQuestions.get(position).id) == null && mQuestions.get(position).displayType.equals(QuestionTypes.TYPE_RATING_SMILEY)) {
+                aFragment = new QuestionSmileyRatingFragment();
+                aFragment.setArguments(aBundle);
+                mFragments.put(mQuestions.get(position).id, aFragment);
+            } else if (mFragments.get(mQuestions.get(position).id) == null && mQuestions.get(position).displayType.equals(QuestionTypes.TYPE_SELECT)) {
+                aFragment = new QuestionSelectFragment();
                 aFragment.setArguments(aBundle);
                 mFragments.put(mQuestions.get(position).id, aFragment);
             }
@@ -236,6 +258,14 @@ public class MultiPageFragment extends Fragment implements View.OnClickListener 
             return ((QuestionNPSFragment) mAdapter.getItem(mViewPager.getCurrentItem())).validateAnswer();
         } else if (mAdapter.getItem(mViewPager.getCurrentItem()) instanceof QuestionTextAreaFragment) {
             return ((QuestionTextAreaFragment) mAdapter.getItem(mViewPager.getCurrentItem())).validateAnswer();
+        } else if (mAdapter.getItem(mViewPager.getCurrentItem()) instanceof QuestionStarRatingFragment) {
+            return ((QuestionStarRatingFragment) mAdapter.getItem(mViewPager.getCurrentItem())).validateAnswer();
+        } else if (mAdapter.getItem(mViewPager.getCurrentItem()) instanceof QuestionMultiselectFragment) {
+            return ((QuestionMultiselectFragment) mAdapter.getItem(mViewPager.getCurrentItem())).validateAnswer();
+        } else if (mAdapter.getItem(mViewPager.getCurrentItem()) instanceof QuestionSmileyRatingFragment) {
+            return ((QuestionSmileyRatingFragment) mAdapter.getItem(mViewPager.getCurrentItem())).validateAnswer();
+        } else if (mAdapter.getItem(mViewPager.getCurrentItem()) instanceof QuestionSelectFragment) {
+            return ((QuestionSelectFragment) mAdapter.getItem(mViewPager.getCurrentItem())).validateAnswer();
         }
         return true;
     }

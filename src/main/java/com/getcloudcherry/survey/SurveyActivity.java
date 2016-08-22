@@ -26,11 +26,11 @@ import com.getcloudcherry.survey.fragments.MultiPageFragment;
 import com.getcloudcherry.survey.fragments.ThanksFragment;
 import com.getcloudcherry.survey.fragments.WelcomeFragment;
 import com.getcloudcherry.survey.helper.Constants;
+import com.getcloudcherry.survey.helper.RecordAnalytics;
 import com.getcloudcherry.survey.helper.RecordAnswer;
 import com.getcloudcherry.survey.helper.SurveyCC;
 import com.getcloudcherry.survey.httpclient.SurveyClient;
 import com.getcloudcherry.survey.interfaces.FragmentCallBack;
-import com.getcloudcherry.survey.interfaces.QuestionCallback;
 import com.getcloudcherry.survey.model.Answer;
 import com.getcloudcherry.survey.model.LoginToken;
 import com.getcloudcherry.survey.model.SurveyQuestions;
@@ -331,6 +331,7 @@ public class SurveyActivity extends AppCompatActivity implements FragmentCallBac
             aAlertDialog.cancel();
         }
         RecordAnswer.getInstance().reset();
+        RecordAnalytics.getInstance().reset();
         replaceFragment(new ThanksFragment());
     }
 
@@ -518,5 +519,12 @@ public class SurveyActivity extends AppCompatActivity implements FragmentCallBac
     public void onQuestionDisplayed(SurveyQuestions iQuestion, int iPosition, boolean isLastPage) {
         mCurrentPage = iPosition;
         mIsLastPage = isLastPage;
+        Constants.logInfo("onQuestionDisplayed", "Question : " + iQuestion.text + " : position : " + iPosition);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        SurveyCC.getInstance().removeFragmentDataListener(this);
     }
 }

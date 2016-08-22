@@ -33,32 +33,14 @@
         android:paddingRight="@dimen/margin_8"
         android:paddingTop="@dimen/margin_8">
 
-        <RelativeLayout
+        <LinearLayout
+            android:id="@+id/linearMultiselect"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:orientation="horizontal"
             android:layout_gravity="center">
 
-            <RadioGroup
-                android:id="@+id/rbgRating"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:orientation="horizontal">
-
-            </RadioGroup>
-
-            <LinearLayout
-                android:id="@+id/linearLegends"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_below="@+id/rbgRating"
-                android:layout_marginTop="@dimen/margin_16"
-                android:orientation="horizontal"
-                android:visibility="gone">
-
-            </LinearLayout>
-
-        </RelativeLayout>
+        </LinearLayout>
     </LinearLayout>
 
 </LinearLayout>

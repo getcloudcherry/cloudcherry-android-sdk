@@ -4,12 +4,14 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.text.TextUtils;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -21,15 +23,16 @@ import com.getcloudcherry.survey.model.SurveyQuestions;
 
 
 /**
- * Fragment to display and handle MultilineText type question
+ * Fragment to display and handle Star rating type question
  */
-public class QuestionTextAreaFragment extends Fragment {
-    private EditText mETAnswer;
+public class QuestionStarRatingFragment extends Fragment implements RatingBar.OnRatingBarChangeListener {
+    private RatingBar mRating;
     private SurveyQuestions mQuestion;
     private TextView mTVTitle;
     private LinearLayout mQuestionHeaderLayout;
     private boolean isLastPage;
     private int mCurrentPosition;
+    private String mAnswer;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -39,7 +42,7 @@ public class QuestionTextAreaFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_textarea_question, container, false);
+        return inflater.inflate(R.layout.fragment_star_rating_question, container, false);
     }
 
     @Override
@@ -47,9 +50,10 @@ public class QuestionTextAreaFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         mQuestionHeaderLayout = (LinearLayout) view.findViewById(R.id.linearHeader);
         mTVTitle = (TextView) view.findViewById(R.id.tvTitle);
-        mETAnswer = (EditText) view.findViewById(R.id.etEditType);
+        mRating = (RatingBar) view.findViewById(R.id.ratingBar);
         initializeViewsWithConfig();
         mTVTitle.setText(mQuestion.text);
+        mRating.setOnRatingBarChangeListener(this);
     }
 
     /**
@@ -76,19 +80,14 @@ public class QuestionTextAreaFragment extends Fragment {
      */
     public boolean validateAnswer() {
         if (mQuestion.isRequired) {
-            if (mETAnswer.getText().toString().trim().length() == 0) {
+            if (TextUtils.isEmpty(mAnswer)) {
                 showToast(getString(R.string.validate_answer));
                 return false;
             } else {
-                RecordAnswer.getInstance().recordAnswer(mQuestion, mETAnswer.getText().toString().trim());
                 submitPartial();
             }
         } else {
-            RecordAnswer.getInstance().recordAnswer(mQuestion, mETAnswer.getText().toString().trim());
-            // If partial response is enabled then capture
-            if (SurveyCC.getInstance().isPartialCapturing()) {
-                submitPartial();
-            }
+            submitPartial();
         }
         return true;
     }
@@ -123,6 +122,13 @@ public class QuestionTextAreaFragment extends Fragment {
             mCurrentPosition = aBundle.getInt(MultiPageFragment.EXTRAS_POSITION);
             isLastPage = (mCurrentPosition == (SurveyCC.getInstance().getSurveyQuestions().size() - 1));
         }
+    }
+
+    @Override
+    public void onRatingChanged(RatingBar ratingBar, float v, boolean b) {
+        Log.i("Star", (int) v + "");
+        mAnswer = String.valueOf((int) v);
+        RecordAnswer.getInstance().recordAnswer(mQuestion, Integer.parseInt(mAnswer));
     }
 
 }

@@ -9,9 +9,11 @@ import com.getcloudcherry.survey.R;
 import com.getcloudcherry.survey.SurveyActivity;
 import com.getcloudcherry.survey.builder.SurveyConfigBuilder;
 import com.getcloudcherry.survey.filter.QuestionFilterHelper;
+import com.getcloudcherry.survey.interfaces.AnalyticsCallBack;
 import com.getcloudcherry.survey.interfaces.FragmentCallBack;
 import com.getcloudcherry.survey.interfaces.QuestionCallback;
 import com.getcloudcherry.survey.model.Answer;
+import com.getcloudcherry.survey.model.Data;
 import com.getcloudcherry.survey.model.SurveyQuestions;
 import com.getcloudcherry.survey.model.SurveyResponse;
 
@@ -72,6 +74,7 @@ public class SurveyCC {
     //Listeners
     private ArrayList<FragmentCallBack> mFragmentDataCallback = new ArrayList<>();
     private ArrayList<QuestionCallback> mQuestionCallbacks = new ArrayList<>();
+    private ArrayList<AnalyticsCallBack> mAnalyticsCallbacks = new ArrayList<>();
 
 
     /**
@@ -428,6 +431,16 @@ public class SurveyCC {
     }
 
     /**
+     * Removes listener
+     *
+     * @param iCallBack
+     */
+    public void removeFragmentDataListener(FragmentCallBack iCallBack) {
+        if (iCallBack != null)
+            mFragmentDataCallback.remove(iCallBack);
+    }
+
+    /**
      * Gets array list of all the listeners registered for current question being displayed
      *
      * @return
@@ -487,6 +500,62 @@ public class SurveyCC {
     }
 
     //******************************Question CallBack**********************************//
+
+    //******************************Analytics CallBack**********************************//
+
+    /**
+     * Sets analytics listener to receive updates
+     *
+     * @param iCallBack
+     */
+    public void setAnalyticsListener(AnalyticsCallBack iCallBack) {
+        if (iCallBack != null)
+            mAnalyticsCallbacks.add(iCallBack);
+    }
+    /**
+     * Removes analytics listener
+     *
+     * @param iCallBack
+     */
+    public void removeAnalyticsListener(AnalyticsCallBack iCallBack) {
+        if (iCallBack != null)
+            mAnalyticsCallbacks.remove(iCallBack);
+    }
+
+    /**
+     * Gets array list of all the listeners registered for current question being displayed
+     *
+     * @return
+     */
+    private ArrayList<AnalyticsCallBack> getAnalyticsCallback() {
+        return mAnalyticsCallbacks;
+    }
+
+    /**
+     * Sends array list analytics data
+     */
+    public void sendAnalyticsDataDump() {
+        if (mAnalyticsCallbacks != null) {
+            for (AnalyticsCallBack aCallBack : mAnalyticsCallbacks) {
+                aCallBack.onUpdatedAnalyticsData(RecordAnalytics.getInstance().getAnalyticsDataDump());
+            }
+        }
+    }
+
+    /**
+     * Sends arraylist of survey questions
+     */
+    public void sendAnalyticsData(SurveyQuestions iQuestion) {
+        if (mAnalyticsCallbacks != null) {
+            for (AnalyticsCallBack aCallBack : mAnalyticsCallbacks) {
+                Data aData = RecordAnalytics.getInstance().getAnalyticsDataForQuestionId(iQuestion.id);
+                if (aData != null)
+                    aCallBack.onSurveyQuestionSeen(aData);
+            }
+        }
+    }
+
+    //******************************Analytics CallBack**********************************//
 
 
     /**

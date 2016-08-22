@@ -1,14 +1,11 @@
 package com.getcloudcherry.survey.fragments;
 
-import android.content.Context;
-import android.content.res.Resources;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.text.TextUtils;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -25,6 +22,7 @@ import com.getcloudcherry.survey.R;
 import com.getcloudcherry.survey.SurveyActivity;
 import com.getcloudcherry.survey.helper.RecordAnswer;
 import com.getcloudcherry.survey.helper.SurveyCC;
+import com.getcloudcherry.survey.helper.Utils;
 import com.getcloudcherry.survey.model.SurveyQuestions;
 
 
@@ -62,7 +60,7 @@ public class QuestionNPSFragment extends Fragment implements RadioGroup.OnChecke
         mQuestionHeaderLayout = (LinearLayout) view.findViewById(R.id.linearHeader);
         mTVTitle = (TextView) view.findViewById(R.id.tvTitle);
         mRadioGroup = (RadioGroup) view.findViewById(R.id.rbgRating);
-        mLegendLayout = (LinearLayout)view.findViewById(R.id.linearLegends);
+        mLegendLayout = (LinearLayout) view.findViewById(R.id.linearLegends);
         initializeViewsWithConfig();
         mRadioGroup.setOnCheckedChangeListener(this);
         createScale();
@@ -74,27 +72,102 @@ public class QuestionNPSFragment extends Fragment implements RadioGroup.OnChecke
      */
     private void createScale() {
         mLegendLayout.setVisibility(isNPS ? View.VISIBLE : View.GONE);
+
         if (mQuestion.multiSelect != null && !TextUtils.isEmpty(mQuestion.multiSelect.get(0))) {
-            String[] aLimit = mQuestion.multiSelect.get(0).split("-");
-            if (aLimit.length > 0) {
-                mMin = Integer.parseInt(aLimit[0]);
-                mMax = Integer.parseInt(aLimit[1]);
-                for (int i = 0; i <= mMax; i++) {
-                    RadioButton aRadio = new RadioButton(getActivity());
-                    aRadio.setText(String.valueOf(mMin + i));
-                    aRadio.setId(mMin + i);
-                    aRadio.setPadding(0, (int) convertDpToPixel(5, getActivity()), 0, (int) convertDpToPixel(5, getActivity()));
-                    if (isNPS) {
-                        setRequiredColor(aRadio, i);
-                    } else {
-                        aRadio.setBackgroundResource(R.drawable.rate0_check);
-                    }
-                    aRadio.setButtonDrawable(android.R.color.transparent);
-                    aRadio.setGravity(Gravity.CENTER);
-                    aRadio.setLayoutParams(new RadioGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
-                    aRadio.setTextColor(ContextCompat.getColorStateList(getActivity(), R.color.nps_text_state));
-                    mRadioGroup.addView(aRadio);
+            String[] aData = mQuestion.multiSelect.get(0).split("-");
+            String[] aLowData = aData[0].split(";");
+            String[] aMaxData = aData[1].split(";");
+            if (aLowData.length > 1) {
+                //Has custom legend
+                String aMinLegend = aLowData[1];
+                String aMaxLegend = aMaxData[1];
+                mMin = Integer.parseInt(aLowData[0]);
+                mMax = Integer.parseInt(aMaxData[0]);
+                if (isNPS)
+                    createMinMaxLegend(aMinLegend, aMaxLegend);
+            } else {
+                mMin = Integer.parseInt(aData[0]);
+                mMax = Integer.parseInt(aData[1]);
+                if (isNPS)
+                    createDefaultLegend();
+            }
+            for (int i = 0; i <= mMax; i++) {
+                RadioButton aRadio = new RadioButton(getActivity());
+                aRadio.setText(String.valueOf(mMin + i));
+                aRadio.setId(mMin + i);
+                aRadio.setPadding(0, (int) Utils.convertDpToPixel(5), 0, (int) Utils.convertDpToPixel(5));
+                if (isNPS) {
+                    setRequiredColor(aRadio, i);
+                } else {
+                    aRadio.setBackgroundResource(R.drawable.rate0_check);
                 }
+                aRadio.setButtonDrawable(android.R.color.transparent);
+                aRadio.setGravity(Gravity.CENTER);
+                aRadio.setLayoutParams(new RadioGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+                aRadio.setTextColor(ContextCompat.getColorStateList(getActivity(), R.color.nps_text_state));
+                mRadioGroup.addView(aRadio);
+            }
+        }
+    }
+
+    /**
+     * Generates default legend
+     */
+    void createDefaultLegend() {
+        for (int i = 0; i < 3; i++) {
+            LinearLayout aLinearLegend = new LinearLayout(getActivity());
+            aLinearLegend.setGravity(Gravity.CENTER);
+            aLinearLegend.setOrientation(LinearLayout.VERTICAL);
+            View aView = new View(getActivity());
+            aView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (int) Utils.convertDpToPixel(2)));
+            TextView aLegendText = new TextView(getActivity());
+            aLegendText.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+            aLegendText.setTextSize(TypedValue.COMPLEX_UNIT_SP, 8);
+            if (i == 0) {
+                aLegendText.setText(R.string.not_at_all);
+                aLinearLegend.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 70f));
+                aView.setBackgroundColor(ContextCompat.getColor(getActivity(), R.color.color_legend_1));
+                aLinearLegend.addView(aView);
+                aLinearLegend.addView(aLegendText);
+                mLegendLayout.addView(aLinearLegend);
+            } else if (i == 1) {
+                aLegendText.setText(R.string.maybe);
+                aLinearLegend.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 20f));
+                aView.setBackgroundColor(ContextCompat.getColor(getActivity(), R.color.color_legend_2));
+                aLinearLegend.addView(aView);
+                aLinearLegend.addView(aLegendText);
+                mLegendLayout.addView(aLinearLegend);
+            } else if (i == 2) {
+                aLegendText.setText(R.string.yes_for_sure);
+                aLinearLegend.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 20f));
+                aView.setBackgroundColor(ContextCompat.getColor(getActivity(), R.color.color_legend_3));
+                aLinearLegend.addView(aView);
+                aLinearLegend.addView(aLegendText);
+                mLegendLayout.addView(aLinearLegend);
+            }
+        }
+    }
+
+    /**
+     * Generates custom legend for min and max values
+     *
+     * @param iMinLegend
+     * @param iMaxLegend
+     */
+    void createMinMaxLegend(String iMinLegend, String iMaxLegend) {
+        for (int i = 0; i < 2; i++) {
+            TextView aLegendText = new TextView(getActivity());
+            aLegendText.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+            aLegendText.setTextSize(TypedValue.COMPLEX_UNIT_SP, 8);
+            if (i == 0) {
+                aLegendText.setText(iMinLegend);
+                aLegendText.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);
+                mLegendLayout.addView(aLegendText);
+
+            } else if (i == 1) {
+                aLegendText.setText(iMaxLegend);
+                aLegendText.setGravity(Gravity.RIGHT | Gravity.CENTER_VERTICAL);
+                mLegendLayout.addView(aLegendText);
             }
         }
     }
@@ -128,20 +201,6 @@ public class QuestionNPSFragment extends Fragment implements RadioGroup.OnChecke
             iRadio.setBackgroundResource(R.drawable.rate9_check);
         else if (iPosition == 10)
             iRadio.setBackgroundResource(R.drawable.rate10_check);
-    }
-
-    /**
-     * This method converts dp unit to equivalent pixels, depending on device density.
-     *
-     * @param dp      A value in dp (density independent pixels) unit. Which we need to convert into pixels
-     * @param context Context to get resources and device specific display metrics
-     * @return A float value to represent px equivalent to dp depending on device density
-     */
-    public static float convertDpToPixel(float dp, Context context) {
-        Resources resources = context.getResources();
-        DisplayMetrics metrics = resources.getDisplayMetrics();
-        float px = dp * ((float) metrics.densityDpi / DisplayMetrics.DENSITY_DEFAULT);
-        return px;
     }
 
     /**
@@ -222,4 +281,5 @@ public class QuestionNPSFragment extends Fragment implements RadioGroup.OnChecke
             RecordAnswer.getInstance().recordAnswer(mQuestion, mAnswer);
         }
     }
+
 }
