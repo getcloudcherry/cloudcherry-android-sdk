@@ -16,6 +16,7 @@ import com.getcloudcherry.survey.model.Answer;
 import com.getcloudcherry.survey.model.Data;
 import com.getcloudcherry.survey.model.SurveyQuestions;
 import com.getcloudcherry.survey.model.SurveyResponse;
+import com.getcloudcherry.survey.model.SurveyToken;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -76,6 +77,8 @@ public class SurveyCC {
     private ArrayList<QuestionCallback> mQuestionCallbacks = new ArrayList<>();
     private ArrayList<AnalyticsCallBack> mAnalyticsCallbacks = new ArrayList<>();
 
+    //Token Config
+    private static SurveyToken mTokenConfig;
 
     /**
      * Initializes the SDK with application context
@@ -95,8 +98,9 @@ public class SurveyCC {
      *
      * @param iContext application context
      */
-    public static void initialise(Context iContext, String iUsername, String iPassword) {
+    public static void initialise(Context iContext, String iUsername, String iPassword, SurveyToken iTokenConfig) {
         setCredentials(iUsername, iPassword);
+        mTokenConfig = iTokenConfig;
         initialise(iContext, null);
         mShouldCreate = true;
     }
@@ -310,6 +314,15 @@ public class SurveyCC {
     }
 
     /**
+     * Gets Survey token configuration set earlier
+     *
+     * @return SurveyToken object
+     */
+    public SurveyToken getTokenConfig() {
+        return mTokenConfig;
+    }
+
+    /**
      * Checks if response can be partially captured
      *
      * @return boolean
@@ -512,6 +525,7 @@ public class SurveyCC {
         if (iCallBack != null)
             mAnalyticsCallbacks.add(iCallBack);
     }
+
     /**
      * Removes analytics listener
      *

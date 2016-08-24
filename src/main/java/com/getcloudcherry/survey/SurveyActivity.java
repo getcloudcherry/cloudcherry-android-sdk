@@ -432,7 +432,7 @@ public class SurveyActivity extends AppCompatActivity implements FragmentCallBac
      */
     void createNewSurveyToken() {
         showProgressBar();
-        Call<SurveyToken> aCall = SurveyClient.get().createSurveyToken(new SurveyToken(1));
+        Call<SurveyToken> aCall = SurveyClient.get().createSurveyToken(SurveyCC.getInstance().getTokenConfig());
         aCall.enqueue(new Callback<SurveyToken>() {
             @Override
             public void onResponse(Call<SurveyToken> call, Response<SurveyToken> response) {

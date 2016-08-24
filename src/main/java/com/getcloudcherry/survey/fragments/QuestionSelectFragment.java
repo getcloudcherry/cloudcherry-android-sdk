@@ -68,7 +68,7 @@ public class QuestionSelectFragment extends Fragment implements RadioGroup.OnChe
     private void createSingleSelect() {
         RadioGroup.LayoutParams aParams = new RadioGroup.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
         aParams.gravity = Gravity.TOP;
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < mQuestion.multiSelect.size(); i++) {
             RadioButton aRadio = new RadioButton(getActivity());
             aRadio.setText(mQuestion.multiSelect.get(i));
             aRadio.setId(i + 1);
