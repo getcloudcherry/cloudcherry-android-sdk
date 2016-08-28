@@ -5,12 +5,14 @@
     android:layout_height="match_parent"
     tools:context="com.getcloudcherry.survey.SurveyActivity">
 
-    <TextView
+    <com.getcloudcherry.survey.customviews.AutoResizeTextView
         android:id="@+id/tvStartSurvey"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/margin_16"
         android:gravity="center"
+        android:maxLines="4"
+        android:maxHeight="100dp"
         android:text="@string/like_to_start_survey"
         android:textSize="20sp" />
 

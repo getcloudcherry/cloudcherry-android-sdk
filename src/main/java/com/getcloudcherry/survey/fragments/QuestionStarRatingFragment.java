@@ -17,6 +17,8 @@ import android.widget.Toast;
 
 import com.getcloudcherry.survey.R;
 import com.getcloudcherry.survey.SurveyActivity;
+import com.getcloudcherry.survey.filter.ConditionalFlowFilter;
+import com.getcloudcherry.survey.filter.ConditionalTextFilter;
 import com.getcloudcherry.survey.helper.RecordAnswer;
 import com.getcloudcherry.survey.helper.SurveyCC;
 import com.getcloudcherry.survey.model.SurveyQuestions;
@@ -33,10 +35,14 @@ public class QuestionStarRatingFragment extends Fragment implements RatingBar.On
     private boolean isLastPage;
     private int mCurrentPosition;
     private String mAnswer;
+    private boolean isRestored = false;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (savedInstanceState != null) {
+            isRestored = true;
+        }
         getExtraArguments();
     }
 
@@ -52,8 +58,8 @@ public class QuestionStarRatingFragment extends Fragment implements RatingBar.On
         mTVTitle = (TextView) view.findViewById(R.id.tvTitle);
         mRating = (RatingBar) view.findViewById(R.id.ratingBar);
         initializeViewsWithConfig();
-        mTVTitle.setText(mQuestion.text);
         mRating.setOnRatingBarChangeListener(this);
+        mTVTitle.setText(mQuestion.text);
     }
 
     /**
@@ -127,8 +133,31 @@ public class QuestionStarRatingFragment extends Fragment implements RatingBar.On
     @Override
     public void onRatingChanged(RatingBar ratingBar, float v, boolean b) {
         Log.i("Star", (int) v + "");
-        mAnswer = String.valueOf((int) v);
-        RecordAnswer.getInstance().recordAnswer(mQuestion, Integer.parseInt(mAnswer));
+        if (!isRestored) {
+            mAnswer = String.valueOf((int) v);
+            RecordAnswer.getInstance().recordAnswer(mQuestion, Integer.parseInt(mAnswer));
+            ConditionalFlowFilter.filterQuestion(mQuestion);
+        } else {
+            isRestored = false;
+        }
+    }
+
+    /**
+     * Method to handle conditional display text for current question being displayed
+     */
+    private void setQuestionTitle() {
+        if (mQuestion != null) {
+            String aTitle = ConditionalTextFilter.filterText(mQuestion);
+            mTVTitle.setText(aTitle);
+        }
+    }
+
+    @Override
+    public void setUserVisibleHint(boolean visible) {
+        super.setUserVisibleHint(visible);
+        if (visible && isResumed()) {
+            setQuestionTitle();
+        }
     }
 
 }

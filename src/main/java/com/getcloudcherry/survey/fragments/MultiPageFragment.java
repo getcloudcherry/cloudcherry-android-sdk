@@ -27,16 +27,15 @@ import com.getcloudcherry.survey.helper.FontCache;
 import com.getcloudcherry.survey.helper.RecordAnalytics;
 import com.getcloudcherry.survey.helper.RecordAnswer;
 import com.getcloudcherry.survey.helper.SurveyCC;
-import com.getcloudcherry.survey.model.SurveyQuestions;
+import com.getcloudcherry.survey.interfaces.ConditionalChangesCallBack;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * Fragment to handle multiple page creation based on the number of survey questions
  */
-public class MultiPageFragment extends Fragment implements View.OnClickListener {
+public class MultiPageFragment extends Fragment implements View.OnClickListener, ConditionalChangesCallBack {
     public CustomViewPager mViewPager;
     public static final String EXTRAS_QUESTION = "question";
     public static final String EXTRAS_POSITION = "position";
@@ -72,15 +71,16 @@ public class MultiPageFragment extends Fragment implements View.OnClickListener 
         mBNext = (Button) iView.findViewById(R.id.bNext);
         mBPrevious = (Button) iView.findViewById(R.id.bPrevious);
         mViewPager.setPagingEnabled(false);
-        mAdapter = new PagerAdapter(getActivity().getSupportFragmentManager(), ((SurveyActivity) getActivity()).mSurveyQuestions);
+        mViewPager.setOffscreenPageLimit(SurveyCC.getInstance().getSurveyResponse().questions.size());
+        mAdapter = new PagerAdapter(getActivity().getSupportFragmentManager());
         mViewPager.setAdapter(mAdapter);
         mBNext.setOnClickListener(this);
         mBPrevious.setOnClickListener(this);
         setFooterConfig();
         setContentConfig();
-        SurveyCC.getInstance().sendFragmentData(((SurveyActivity) getActivity()).mSurveyQuestions.get(mCurrentPosition), mCurrentPosition, mIsLastPage);
-        RecordAnalytics.getInstance().end(((SurveyActivity) getActivity()).mSurveyQuestions.get(mPreviousPage));
-        RecordAnalytics.getInstance().capture(((SurveyActivity) getActivity()).mSurveyQuestions.get(mCurrentPosition));
+        SurveyCC.getInstance().sendFragmentData(SurveyCC.getInstance().getSurveyQuestions().get(mCurrentPosition), mCurrentPosition, mIsLastPage);
+        RecordAnalytics.getInstance().end(SurveyCC.getInstance().getSurveyQuestions().get(mPreviousPage));
+        RecordAnalytics.getInstance().capture(SurveyCC.getInstance().getSurveyQuestions().get(mCurrentPosition));
         mViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
@@ -100,8 +100,8 @@ public class MultiPageFragment extends Fragment implements View.OnClickListener 
 
             @Override
             public void onPageSelected(int position) {
-                RecordAnalytics.getInstance().end(((SurveyActivity) getActivity()).mSurveyQuestions.get(mPreviousPage));
-                RecordAnalytics.getInstance().capture(((SurveyActivity) getActivity()).mSurveyQuestions.get(mCurrentPosition));
+                RecordAnalytics.getInstance().end(SurveyCC.getInstance().getSurveyQuestions().get(mPreviousPage));
+                RecordAnalytics.getInstance().capture(SurveyCC.getInstance().getSurveyQuestions().get(mCurrentPosition));
                 mPreviousPage = mCurrentPosition;
             }
 
@@ -113,6 +113,7 @@ public class MultiPageFragment extends Fragment implements View.OnClickListener 
         if (!TextUtils.isEmpty(SurveyCC.getInstance().getHeaderActionBarLogo())) {
             ((SurveyActivity) getActivity()).ION.build(SurveyCC.getInstance().getContext()).load(SurveyCC.getInstance().getHeaderActionBarLogo()).withBitmap().error(0).placeholder(0).intoImageView(mIVBrandLogo);
         }
+        SurveyCC.getInstance().setConditionalFlowListener(this);
     }
 
     /**
@@ -137,9 +138,9 @@ public class MultiPageFragment extends Fragment implements View.OnClickListener 
         } else {
             mBPrevious.setVisibility(View.VISIBLE);
         }
-        String aPage = String.valueOf(mCurrentPosition + 1) + "/" + (((SurveyActivity) getActivity()).mSurveyQuestions.size());
+        String aPage = String.valueOf(mCurrentPosition + 1) + "/" + SurveyCC.getInstance().getSurveyQuestions().size();
         mTVPage.setText(aPage);
-        SurveyCC.getInstance().sendFragmentData(((SurveyActivity) getActivity()).mSurveyQuestions.get(mCurrentPosition), mCurrentPosition, mIsLastPage);
+        SurveyCC.getInstance().sendFragmentData(SurveyCC.getInstance().getSurveyQuestions().get(mCurrentPosition), mCurrentPosition, mIsLastPage);
     }
 
     @Override
@@ -185,14 +186,19 @@ public class MultiPageFragment extends Fragment implements View.OnClickListener 
         }
     }
 
-    public class PagerAdapter extends FragmentStatePagerAdapter {
-        ArrayList<SurveyQuestions> mQuestions = new ArrayList<>();
-        private Map<String, Fragment> mFragments = new HashMap<String, Fragment>();
+    @Override
+    public void onPageCountChange(int iTotalPageCount) {
+        String aPage = String.valueOf(mCurrentPosition + 1) + "/" + SurveyCC.getInstance().getSurveyQuestions().size();
+        mTVPage.setText(aPage);
+    }
 
-        public PagerAdapter(FragmentManager fm, ArrayList<SurveyQuestions> mQuestions) {
-            super(fm);
-            this.mQuestions = mQuestions;
-        }
+    @Override
+    public void onConditionalQuestionsAdded() {
+        mAdapter.notifyDataSetChanged();
+    }
+
+    public class PagerAdapter extends FragmentStatePagerAdapter {
+        private Map<String, Fragment> mFragments = new HashMap<String, Fragment>();
 
         private String getTitleFromStrings(int iStringId) {
             return getResources().getString(iStringId);
@@ -206,39 +212,39 @@ public class MultiPageFragment extends Fragment implements View.OnClickListener 
         public Fragment getItem(int position) {
             Fragment aFragment = null;
             Bundle aBundle = new Bundle();
-            aBundle.putParcelable(EXTRAS_QUESTION, mQuestions.get(position));
+            aBundle.putParcelable(EXTRAS_QUESTION, SurveyCC.getInstance().getSurveyQuestions().get(position));
             aBundle.putInt(EXTRAS_POSITION, position);
-            if (mFragments.get(mQuestions.get(position).id) == null && mQuestions.get(position).displayType.equals(QuestionTypes.TYPE_SCALE)) {
+            if (mFragments.get(SurveyCC.getInstance().getSurveyQuestions().get(position).id) == null && SurveyCC.getInstance().getSurveyQuestions().get(position).displayType.equals(QuestionTypes.TYPE_SCALE)) {
                 aFragment = new QuestionNPSFragment();
                 aFragment.setArguments(aBundle);
-                mFragments.put(mQuestions.get(position).id, aFragment);
-            } else if (mFragments.get(mQuestions.get(position).id) == null && mQuestions.get(position).displayType.equals(QuestionTypes.TYPE_MULTI_LINE_TEXT)) {
+                mFragments.put(SurveyCC.getInstance().getSurveyQuestions().get(position).id, aFragment);
+            } else if (mFragments.get(SurveyCC.getInstance().getSurveyQuestions().get(position).id) == null && SurveyCC.getInstance().getSurveyQuestions().get(position).displayType.equals(QuestionTypes.TYPE_MULTI_LINE_TEXT)) {
                 aFragment = new QuestionTextAreaFragment();
                 aFragment.setArguments(aBundle);
-                mFragments.put(mQuestions.get(position).id, aFragment);
-            } else if (mFragments.get(mQuestions.get(position).id) == null && mQuestions.get(position).displayType.equals(QuestionTypes.TYPE_RATING_STAR)) {
+                mFragments.put(SurveyCC.getInstance().getSurveyQuestions().get(position).id, aFragment);
+            } else if (mFragments.get(SurveyCC.getInstance().getSurveyQuestions().get(position).id) == null && SurveyCC.getInstance().getSurveyQuestions().get(position).displayType.equals(QuestionTypes.TYPE_RATING_STAR)) {
                 aFragment = new QuestionStarRatingFragment();
                 aFragment.setArguments(aBundle);
-                mFragments.put(mQuestions.get(position).id, aFragment);
-            } else if (mFragments.get(mQuestions.get(position).id) == null && mQuestions.get(position).displayType.equals(QuestionTypes.TYPE_MULTI_SELECT)) {
+                mFragments.put(SurveyCC.getInstance().getSurveyQuestions().get(position).id, aFragment);
+            } else if (mFragments.get(SurveyCC.getInstance().getSurveyQuestions().get(position).id) == null && SurveyCC.getInstance().getSurveyQuestions().get(position).displayType.equals(QuestionTypes.TYPE_MULTI_SELECT)) {
                 aFragment = new QuestionMultiselectFragment();
                 aFragment.setArguments(aBundle);
-                mFragments.put(mQuestions.get(position).id, aFragment);
-            } else if (mFragments.get(mQuestions.get(position).id) == null && mQuestions.get(position).displayType.equals(QuestionTypes.TYPE_RATING_SMILEY)) {
+                mFragments.put(SurveyCC.getInstance().getSurveyQuestions().get(position).id, aFragment);
+            } else if (mFragments.get(SurveyCC.getInstance().getSurveyQuestions().get(position).id) == null && SurveyCC.getInstance().getSurveyQuestions().get(position).displayType.equals(QuestionTypes.TYPE_RATING_SMILEY)) {
                 aFragment = new QuestionSmileyRatingFragment();
                 aFragment.setArguments(aBundle);
-                mFragments.put(mQuestions.get(position).id, aFragment);
-            } else if (mFragments.get(mQuestions.get(position).id) == null && mQuestions.get(position).displayType.equals(QuestionTypes.TYPE_SELECT)) {
+                mFragments.put(SurveyCC.getInstance().getSurveyQuestions().get(position).id, aFragment);
+            } else if (mFragments.get(SurveyCC.getInstance().getSurveyQuestions().get(position).id) == null && SurveyCC.getInstance().getSurveyQuestions().get(position).displayType.equals(QuestionTypes.TYPE_SELECT)) {
                 aFragment = new QuestionSelectFragment();
                 aFragment.setArguments(aBundle);
-                mFragments.put(mQuestions.get(position).id, aFragment);
+                mFragments.put(SurveyCC.getInstance().getSurveyQuestions().get(position).id, aFragment);
             }
-            return mFragments.get(mQuestions.get(position).id);
+            return mFragments.get(SurveyCC.getInstance().getSurveyQuestions().get(position).id);
         }
 
         @Override
         public int getCount() {
-            return mQuestions.size();
+            return SurveyCC.getInstance().getSurveyQuestions().size();
         }
 
         @Override
@@ -270,4 +276,9 @@ public class MultiPageFragment extends Fragment implements View.OnClickListener 
         return true;
     }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        SurveyCC.getInstance().removeConditionalFlowListener(this);
+    }
 }

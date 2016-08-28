@@ -15,6 +15,8 @@ import android.widget.Toast;
 
 import com.getcloudcherry.survey.R;
 import com.getcloudcherry.survey.SurveyActivity;
+import com.getcloudcherry.survey.filter.ConditionalFlowFilter;
+import com.getcloudcherry.survey.filter.ConditionalTextFilter;
 import com.getcloudcherry.survey.helper.RecordAnswer;
 import com.getcloudcherry.survey.helper.SurveyCC;
 import com.getcloudcherry.survey.model.SurveyQuestions;
@@ -40,6 +42,23 @@ public class QuestionTextAreaFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_textarea_question, container, false);
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString(mQuestion.id, mETAnswer.getText().toString());
+    }
+
+    @Override
+    public void onViewStateRestored(@Nullable Bundle savedInstanceState) {
+        super.onViewStateRestored(savedInstanceState);
+        if (savedInstanceState != null) {
+            String aAnswer = savedInstanceState.getString(mQuestion.id, "");
+            mETAnswer.setText(aAnswer);
+            mETAnswer.setSelection(aAnswer.length());
+        }
+
     }
 
     @Override
@@ -97,6 +116,7 @@ public class QuestionTextAreaFragment extends Fragment {
      * Contains logic to call the Partial response API to submit partial response
      */
     void submitPartial() {
+        ConditionalFlowFilter.filterQuestion(mQuestion);
         if (SurveyCC.getInstance().isPartialCapturing()) {
             if (RecordAnswer.getInstance().getPartialAnswerForQuestionId(mQuestion.id).size() > 0)
                 ((SurveyActivity) getActivity()).submitAnswerPartial(isLastPage, RecordAnswer.getInstance().getPartialAnswerForQuestionId(mQuestion.id));
@@ -122,6 +142,24 @@ public class QuestionTextAreaFragment extends Fragment {
             mQuestion = aBundle.getParcelable(MultiPageFragment.EXTRAS_QUESTION);
             mCurrentPosition = aBundle.getInt(MultiPageFragment.EXTRAS_POSITION);
             isLastPage = (mCurrentPosition == (SurveyCC.getInstance().getSurveyQuestions().size() - 1));
+        }
+    }
+
+    /**
+     * Method to handle conditional display text for current question being displayed
+     */
+    private void setQuestionTitle() {
+        if (mQuestion != null) {
+            String aTitle = ConditionalTextFilter.filterText(mQuestion);
+            mTVTitle.setText(aTitle);
+        }
+    }
+
+    @Override
+    public void setUserVisibleHint(boolean visible) {
+        super.setUserVisibleHint(visible);
+        if (visible && isResumed()) {
+            setQuestionTitle();
         }
     }
 

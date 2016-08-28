@@ -12,7 +12,7 @@ public class FilterBy implements Parcelable {
     public ArrayList<String> location;
     public String afterdate;
     public String beforedate;
-    ArrayList<FilterByQuestions> filterquestions;
+    public ArrayList<FilterByQuestions> filterquestions;
     public boolean archived;
     public boolean withTickets;
     public String withTicketStatus;

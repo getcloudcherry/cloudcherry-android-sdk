@@ -19,6 +19,8 @@ import android.widget.Toast;
 
 import com.getcloudcherry.survey.R;
 import com.getcloudcherry.survey.SurveyActivity;
+import com.getcloudcherry.survey.filter.ConditionalFlowFilter;
+import com.getcloudcherry.survey.filter.ConditionalTextFilter;
 import com.getcloudcherry.survey.helper.Constants;
 import com.getcloudcherry.survey.helper.RecordAnswer;
 import com.getcloudcherry.survey.helper.SurveyCC;
@@ -155,14 +157,17 @@ public class QuestionMultiselectFragment extends Fragment implements CompoundBut
 
     @Override
     public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-        String aAnswer = compoundButton.getText().toString();
-        if (mSelectedAnswers.contains(aAnswer)) {
-            mSelectedAnswers.remove(aAnswer);
-        } else {
-            mSelectedAnswers.add(aAnswer);
+        Constants.logInfo("Button Pressed", compoundButton.isPressed() + "");
+        if (compoundButton.isPressed()) {
+            String aAnswer = compoundButton.getText().toString();
+            if (mSelectedAnswers.contains(aAnswer)) {
+                mSelectedAnswers.remove(aAnswer);
+            } else {
+                mSelectedAnswers.add(aAnswer);
+            }
+            join(mSelectedAnswers);
+            ConditionalFlowFilter.filterQuestion(mQuestion);
         }
-
-        join(mSelectedAnswers);
     }
 
     /**
@@ -182,4 +187,21 @@ public class QuestionMultiselectFragment extends Fragment implements CompoundBut
         RecordAnswer.getInstance().recordAnswer(mQuestion, mAnswer);
     }
 
+    /**
+     * Method to handle conditional display text for current question being displayed
+     */
+    private void setQuestionTitle() {
+        if (mQuestion != null) {
+            String aTitle = ConditionalTextFilter.filterText(mQuestion);
+            mTVTitle.setText(aTitle);
+        }
+    }
+
+    @Override
+    public void setUserVisibleHint(boolean visible) {
+        super.setUserVisibleHint(visible);
+        if (visible && isResumed()) {
+            setQuestionTitle();
+        }
+    }
 }

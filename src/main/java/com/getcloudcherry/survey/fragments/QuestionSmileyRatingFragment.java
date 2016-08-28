@@ -19,6 +19,8 @@ import android.widget.Toast;
 
 import com.getcloudcherry.survey.R;
 import com.getcloudcherry.survey.SurveyActivity;
+import com.getcloudcherry.survey.filter.ConditionalFlowFilter;
+import com.getcloudcherry.survey.filter.ConditionalTextFilter;
 import com.getcloudcherry.survey.helper.RecordAnswer;
 import com.getcloudcherry.survey.helper.SurveyCC;
 import com.getcloudcherry.survey.helper.Utils;
@@ -153,8 +155,11 @@ public class QuestionSmileyRatingFragment extends Fragment implements RadioGroup
     @Override
     public void onCheckedChanged(RadioGroup radioGroup, int i) {
         Log.i("Radio", i + "");
-        mAnswer = String.valueOf(i);
-        RecordAnswer.getInstance().recordAnswer(mQuestion, Integer.parseInt(mAnswer));
+        if (radioGroup.findViewById(i).isPressed()) {
+            mAnswer = String.valueOf(i);
+            RecordAnswer.getInstance().recordAnswer(mQuestion, Integer.parseInt(mAnswer));
+            ConditionalFlowFilter.filterQuestion(mQuestion);
+        }
     }
 
     int getEmojiUnicode(int iPosition) {
@@ -171,6 +176,24 @@ public class QuestionSmileyRatingFragment extends Fragment implements RadioGroup
                 return 0x1F60D;
         }
         return 0;
+    }
+
+    /**
+     * Method to handle conditional display text for current question being displayed
+     */
+    private void setQuestionTitle() {
+        if (mQuestion != null) {
+            String aTitle = ConditionalTextFilter.filterText(mQuestion);
+            mTVTitle.setText(aTitle);
+        }
+    }
+
+    @Override
+    public void setUserVisibleHint(boolean visible) {
+        super.setUserVisibleHint(visible);
+        if (visible && isResumed()) {
+            setQuestionTitle();
+        }
     }
 
 }

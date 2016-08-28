@@ -7,7 +7,14 @@
         android:id="@+id/viewPager"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@+id/linearFooter"/>
+        android:layout_above="@+id/viewDivider" />
+
+    <View
+        android:id="@+id/viewDivider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_above="@+id/linearFooter"
+        android:background="@android:color/black" />
 
     <LinearLayout
         android:id="@+id/linearFooter"
@@ -49,13 +56,13 @@
         android:id="@+id/tvPage"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_above="@+id/viewDivider"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
         android:layout_gravity="center_vertical"
+        android:gravity="center"
         android:paddingLeft="@dimen/margin_8"
         android:paddingRight="@dimen/margin_8"
-        android:gravity="center"
-        android:text=""
-        android:layout_above="@+id/linearFooter"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true" />
+        android:text="" />
 
 </RelativeLayout>

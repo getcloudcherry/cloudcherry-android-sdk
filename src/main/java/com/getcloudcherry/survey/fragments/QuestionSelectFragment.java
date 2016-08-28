@@ -19,6 +19,8 @@ import android.widget.Toast;
 
 import com.getcloudcherry.survey.R;
 import com.getcloudcherry.survey.SurveyActivity;
+import com.getcloudcherry.survey.filter.ConditionalFlowFilter;
+import com.getcloudcherry.survey.filter.ConditionalTextFilter;
 import com.getcloudcherry.survey.helper.Constants;
 import com.getcloudcherry.survey.helper.RecordAnswer;
 import com.getcloudcherry.survey.helper.SurveyCC;
@@ -152,9 +154,30 @@ public class QuestionSelectFragment extends Fragment implements RadioGroup.OnChe
     @Override
     public void onCheckedChanged(RadioGroup radioGroup, int i) {
         Log.i("Radio", i + "");
-        mAnswer = ((RadioButton)radioGroup.findViewById(i)).getText().toString();
-        Constants.logInfo("Answer", mAnswer);
-        RecordAnswer.getInstance().recordAnswer(mQuestion, mAnswer);
+        if (radioGroup.findViewById(i).isPressed()) {
+            mAnswer = ((RadioButton) radioGroup.findViewById(i)).getText().toString();
+            Constants.logInfo("Answer", mAnswer);
+            RecordAnswer.getInstance().recordAnswer(mQuestion, mAnswer);
+            ConditionalFlowFilter.filterQuestion(mQuestion);
+        }
+    }
+
+    /**
+     * Method to handle conditional display text for current question being displayed
+     */
+    private void setQuestionTitle() {
+        if (mQuestion != null) {
+            String aTitle = ConditionalTextFilter.filterText(mQuestion);
+            mTVTitle.setText(aTitle);
+        }
+    }
+
+    @Override
+    public void setUserVisibleHint(boolean visible) {
+        super.setUserVisibleHint(visible);
+        if (visible && isResumed()) {
+            setQuestionTitle();
+        }
     }
 
 }

@@ -10,6 +10,7 @@ import com.getcloudcherry.survey.SurveyActivity;
 import com.getcloudcherry.survey.builder.SurveyConfigBuilder;
 import com.getcloudcherry.survey.filter.QuestionFilterHelper;
 import com.getcloudcherry.survey.interfaces.AnalyticsCallBack;
+import com.getcloudcherry.survey.interfaces.ConditionalChangesCallBack;
 import com.getcloudcherry.survey.interfaces.FragmentCallBack;
 import com.getcloudcherry.survey.interfaces.QuestionCallback;
 import com.getcloudcherry.survey.model.Answer;
@@ -71,11 +72,13 @@ public class SurveyCC {
     public int FOOTER_PAGE_FONT_COLOR = android.R.color.black;
     private SurveyResponse mSurveyResponse;
     private ArrayList<SurveyQuestions> mSurveyQuestions = new ArrayList<>();
+    private ArrayList<SurveyQuestions> mConditionalQuestions = new ArrayList<>();
 
     //Listeners
     private ArrayList<FragmentCallBack> mFragmentDataCallback = new ArrayList<>();
     private ArrayList<QuestionCallback> mQuestionCallbacks = new ArrayList<>();
     private ArrayList<AnalyticsCallBack> mAnalyticsCallbacks = new ArrayList<>();
+    private ArrayList<ConditionalChangesCallBack> mConditionalFlowCallbacks = new ArrayList<>();
 
     //Token Config
     private static SurveyToken mTokenConfig;
@@ -571,6 +574,51 @@ public class SurveyCC {
 
     //******************************Analytics CallBack**********************************//
 
+    //******************************Conditional Question CallBack**********************************//
+
+    /**
+     * Sets listener to receive updates on conditional question filter
+     *
+     * @param iCallBack
+     */
+    public void setConditionalFlowListener(ConditionalChangesCallBack iCallBack) {
+        if (iCallBack != null)
+            mConditionalFlowCallbacks.add(iCallBack);
+    }
+
+    /**
+     * Removes conditional flow listener
+     *
+     * @param iCallBack
+     */
+    public void removeConditionalFlowListener(ConditionalChangesCallBack iCallBack) {
+        if (iCallBack != null)
+            mConditionalFlowCallbacks.remove(iCallBack);
+    }
+
+    /**
+     * Gets array list of all the listeners registered for conditional flow changes
+     *
+     * @return
+     */
+    private ArrayList<ConditionalChangesCallBack> getConditionalFLowListener() {
+        return mConditionalFlowCallbacks;
+    }
+
+    /**
+     * Sends arraylist of survey questions
+     */
+    public void sendConditionalFLowQuestionsData(int iTotalPageCount) {
+        if (mConditionalFlowCallbacks != null) {
+            for (ConditionalChangesCallBack aCallBack : mConditionalFlowCallbacks) {
+                aCallBack.onConditionalQuestionsAdded();
+                aCallBack.onPageCountChange(iTotalPageCount);
+            }
+        }
+    }
+
+    //******************************Question CallBack**********************************//
+
 
     /**
      * Sets SurveyResponse object
@@ -603,6 +651,24 @@ public class SurveyCC {
      */
     public ArrayList<SurveyQuestions> getSurveyQuestions() {
         return mSurveyQuestions;
+    }
+
+    /**
+     * Gets array list of conditional survey questions
+     *
+     * @return array list of survey questions
+     */
+    public ArrayList<SurveyQuestions> getConditionalSurveyQuestions() {
+        return mConditionalQuestions;
+    }
+
+    /**
+     * Adds conditional survey question to the list of conditional survey question
+     *
+     * @return survey questions object
+     */
+    public void addConditionalSurveyQuestions(SurveyQuestions iQuestion) {
+        mConditionalQuestions.add(iQuestion);
     }
 
 }

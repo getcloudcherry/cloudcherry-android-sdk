@@ -20,6 +20,9 @@ import android.widget.Toast;
 
 import com.getcloudcherry.survey.R;
 import com.getcloudcherry.survey.SurveyActivity;
+import com.getcloudcherry.survey.filter.ConditionalFlowFilter;
+import com.getcloudcherry.survey.filter.ConditionalTextFilter;
+import com.getcloudcherry.survey.helper.Constants;
 import com.getcloudcherry.survey.helper.RecordAnswer;
 import com.getcloudcherry.survey.helper.SurveyCC;
 import com.getcloudcherry.survey.helper.Utils;
@@ -41,6 +44,8 @@ public class QuestionNPSFragment extends Fragment implements RadioGroup.OnChecke
     private boolean isNPS;
     private boolean isLastPage;
     private int mCurrentPosition;
+    private boolean isListenerSet = false;
+    private int positionChecked = 0;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -62,9 +67,19 @@ public class QuestionNPSFragment extends Fragment implements RadioGroup.OnChecke
         mRadioGroup = (RadioGroup) view.findViewById(R.id.rbgRating);
         mLegendLayout = (LinearLayout) view.findViewById(R.id.linearLegends);
         initializeViewsWithConfig();
-        mRadioGroup.setOnCheckedChangeListener(this);
         createScale();
         mTVTitle.setText(mQuestion.text);
+    }
+
+    @Override
+    public void onViewStateRestored(@Nullable Bundle savedInstanceState) {
+        super.onViewStateRestored(savedInstanceState);
+    }
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        mRadioGroup.setOnCheckedChangeListener(this);
     }
 
     /**
@@ -243,6 +258,7 @@ public class QuestionNPSFragment extends Fragment implements RadioGroup.OnChecke
      * Contains logic to call the Partial response API to submit partial response
      */
     void submitPartial() {
+//        ConditionalFlowFilter.filterQuestion(mQuestion);
         if (SurveyCC.getInstance().isPartialCapturing()) {
             ((SurveyActivity) getActivity()).submitAnswerPartial(isLastPage, RecordAnswer.getInstance().getPartialAnswerForQuestionId(mQuestion.id));
         }
@@ -274,11 +290,33 @@ public class QuestionNPSFragment extends Fragment implements RadioGroup.OnChecke
     @Override
     public void onCheckedChanged(RadioGroup radioGroup, int i) {
         Log.i("Radio", i + "");
-        mAnswer = String.valueOf(i);
-        if (isNPS) {
-            RecordAnswer.getInstance().recordAnswer(mQuestion, Integer.parseInt(mAnswer));
-        } else {
-            RecordAnswer.getInstance().recordAnswer(mQuestion, mAnswer);
+        Constants.logInfo("Button Pressed", radioGroup.findViewById(i).isPressed() + "");
+        if (radioGroup.findViewById(i).isPressed()) {
+            mAnswer = String.valueOf(i);
+            if (isNPS) {
+                RecordAnswer.getInstance().recordAnswer(mQuestion, Integer.parseInt(mAnswer));
+            } else {
+                RecordAnswer.getInstance().recordAnswer(mQuestion, mAnswer);
+            }
+            ConditionalFlowFilter.filterQuestion(mQuestion);
+        }
+    }
+
+    /**
+     * Method to handle conditional display text for current question being displayed
+     */
+    private void setQuestionTitle() {
+        if (mQuestion != null) {
+            String aTitle = ConditionalTextFilter.filterText(mQuestion);
+            mTVTitle.setText(aTitle);
+        }
+    }
+
+    @Override
+    public void setUserVisibleHint(boolean visible) {
+        super.setUserVisibleHint(visible);
+        if (visible && isResumed()) {
+            setQuestionTitle();
         }
     }
 

@@ -58,9 +58,7 @@ public class RecordAnswer {
      */
     public void recordAnswer(SurveyQuestions iQuestion, String iAnswer) {
         if (!TextUtils.isEmpty(iAnswer)) {
-            if (SurveyCC.getInstance().isPartialCapturing()) {
-                mPartialResponse.put(iQuestion.id, new Answer(iQuestion.id, iQuestion.text, iAnswer));
-            }
+            mPartialResponse.put(iQuestion.id, new Answer(iQuestion.id, iQuestion.text, iAnswer));
             mAnswers.put(iQuestion.id, new Answer(iQuestion.id, iQuestion.text, iAnswer));
 
         } else {
@@ -81,9 +79,7 @@ public class RecordAnswer {
      */
     public void recordAnswer(SurveyQuestions iQuestion, Integer iAnswer) {
         if (iAnswer != null) {
-            if (SurveyCC.getInstance().isPartialCapturing()) {
-                mPartialResponse.put(iQuestion.id, new Answer(iQuestion.id, iQuestion.text, iAnswer));
-            }
+            mPartialResponse.put(iQuestion.id, new Answer(iQuestion.id, iQuestion.text, iAnswer));
             mAnswers.put(iQuestion.id, new Answer(iQuestion.id, iQuestion.text, iAnswer));
         } else {
             if (mAnswers.containsKey(iQuestion.id)) {
@@ -147,6 +143,16 @@ public class RecordAnswer {
         if (mPreFillAnswers.size() > 0)
             aAnswer.addAll(mPreFillAnswers.values());
         return aAnswer;
+    }
+
+    /**
+     * Gets the saved answer object for question id
+     *
+     * @param iQuestionId question id
+     * @return
+     */
+    public Answer getAnswerForQuestionId(String iQuestionId) {
+        return mPartialResponse.get(iQuestionId);
     }
 
     /**

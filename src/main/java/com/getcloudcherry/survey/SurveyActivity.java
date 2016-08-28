@@ -85,7 +85,7 @@ public class SurveyActivity extends AppCompatActivity implements FragmentCallBac
      * @param iFragment Fragment
      */
     public void replaceFragment(Fragment iFragment) {
-        getSupportFragmentManager().beginTransaction().replace(R.id.fragmentContainer, iFragment).commit();
+        getSupportFragmentManager().beginTransaction().replace(R.id.fragmentContainer, iFragment).commitNow();
     }
 
     /**

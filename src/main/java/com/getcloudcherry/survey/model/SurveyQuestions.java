@@ -8,7 +8,7 @@ import java.util.ArrayList;
 /**
  * Created by riteshdubey on 7/30/16.
  */
-public class SurveyQuestions implements Parcelable {
+public class SurveyQuestions implements Parcelable, Comparable<SurveyQuestions> {
     public String id;
     public String user;
     public String setName;
@@ -49,6 +49,19 @@ public class SurveyQuestions implements Parcelable {
     public SurveyQuestions(String id, String text) {
         this.id = id;
         this.text = text;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (other == null || other.getClass() != getClass()) {
+            return false;
+        }
+        return this.id.equals(((SurveyQuestions) other).id);
+    }
+
+    @Override
+    public int hashCode() {
+        return this.id.hashCode();
     }
 
     @Override
@@ -154,4 +167,12 @@ public class SurveyQuestions implements Parcelable {
             return new SurveyQuestions[size];
         }
     };
+
+    @Override
+    public int compareTo(SurveyQuestions surveyQuestions) {
+        int compareSequence = surveyQuestions.sequence;
+
+        //ascending order
+        return this.sequence - compareSequence;
+    }
 }
