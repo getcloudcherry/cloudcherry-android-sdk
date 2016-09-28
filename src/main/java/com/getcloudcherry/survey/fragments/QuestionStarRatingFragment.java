@@ -2,16 +2,19 @@ package com.getcloudcherry.survey.fragments;
 
 import android.graphics.Color;
 import android.os.Bundle;
+import android.support.annotation.IdRes;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
-import android.widget.RatingBar;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -21,14 +24,16 @@ import com.getcloudcherry.survey.filter.ConditionalFlowFilter;
 import com.getcloudcherry.survey.filter.ConditionalTextFilter;
 import com.getcloudcherry.survey.helper.RecordAnswer;
 import com.getcloudcherry.survey.helper.SurveyCC;
+import com.getcloudcherry.survey.helper.Utils;
 import com.getcloudcherry.survey.model.SurveyQuestions;
 
 
 /**
  * Fragment to display and handle Star rating type question
  */
-public class QuestionStarRatingFragment extends Fragment implements RatingBar.OnRatingBarChangeListener {
-    private RatingBar mRating;
+public class QuestionStarRatingFragment extends Fragment implements /*RatingBar.OnRatingBarChangeListener,*/ RadioGroup.OnCheckedChangeListener {
+    //    private RatingBar mRating;
+    private RadioGroup mRadioGroup;
     private SurveyQuestions mQuestion;
     private TextView mTVTitle;
     private LinearLayout mQuestionHeaderLayout;
@@ -48,7 +53,7 @@ public class QuestionStarRatingFragment extends Fragment implements RatingBar.On
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_star_rating_question, container, false);
+        return inflater.inflate(R.layout.fragment_nps_question, container, false);
     }
 
     @Override
@@ -56,10 +61,32 @@ public class QuestionStarRatingFragment extends Fragment implements RatingBar.On
         super.onViewCreated(view, savedInstanceState);
         mQuestionHeaderLayout = (LinearLayout) view.findViewById(R.id.linearHeader);
         mTVTitle = (TextView) view.findViewById(R.id.tvTitle);
-        mRating = (RatingBar) view.findViewById(R.id.ratingBar);
+        mRadioGroup = (RadioGroup) view.findViewById(R.id.rbgRating);
+//        mRating = (RatingBar) view.findViewById(R.id.ratingBar);
         initializeViewsWithConfig();
-        mRating.setOnRatingBarChangeListener(this);
+        mRadioGroup.setOnCheckedChangeListener(this);
+        createSmileyRating();
+//        mRating.setOnRatingBarChangeListener(this);
+        setSelection(mRadioGroup, mRadioGroup.getCheckedRadioButtonId());
         mTVTitle.setText(mQuestion.text);
+    }
+
+    /**
+     * Dynamically generate custom smiley rating view
+     */
+    private void createSmileyRating() {
+        RadioGroup.LayoutParams aParams = new RadioGroup.LayoutParams((int) Utils.convertDpToPixel(48), (int) Utils.convertDpToPixel(48));
+        aParams.setMargins((int) Utils.convertDpToPixel(5), (int) Utils.convertDpToPixel(10), (int) Utils.convertDpToPixel(5), (int) Utils.convertDpToPixel(10));
+        for (int i = 0; i < 5; i++) {
+            RadioButton aRadio = new RadioButton(getActivity());
+            aRadio.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24);
+            aRadio.setId(i + 1);
+            aRadio.setBackgroundResource(getDrawableResource(i + 1));
+            aRadio.setButtonDrawable(android.R.color.transparent);
+            aRadio.setGravity(Gravity.CENTER);
+            aRadio.setLayoutParams(aParams);
+            mRadioGroup.addView(aRadio);
+        }
     }
 
     /**
@@ -130,17 +157,17 @@ public class QuestionStarRatingFragment extends Fragment implements RatingBar.On
         }
     }
 
-    @Override
-    public void onRatingChanged(RatingBar ratingBar, float v, boolean b) {
-        Log.i("Star", (int) v + "");
-        if (!isRestored) {
-            mAnswer = String.valueOf((int) v);
-            RecordAnswer.getInstance().recordAnswer(mQuestion, Integer.parseInt(mAnswer));
-            ConditionalFlowFilter.filterQuestion(mQuestion);
-        } else {
-            isRestored = false;
-        }
-    }
+//    @Override
+//    public void onRatingChanged(RatingBar ratingBar, float v, boolean b) {
+//        Log.i("Star", (int) v + "");
+//        if (!isRestored) {
+//            mAnswer = String.valueOf((int) v);
+//            RecordAnswer.getInstance().recordAnswer(mQuestion, Integer.parseInt(mAnswer));
+//            ConditionalFlowFilter.filterQuestion(mQuestion);
+//        } else {
+//            isRestored = false;
+//        }
+//    }
 
     /**
      * Method to handle conditional display text for current question being displayed
@@ -160,4 +187,43 @@ public class QuestionStarRatingFragment extends Fragment implements RatingBar.On
         }
     }
 
+    @Override
+    public void onCheckedChanged(RadioGroup radioGroup, int i) {
+        Log.i("Star", i + "");
+        if (radioGroup.findViewById(i).isPressed()) {
+            mAnswer = String.valueOf(i);
+            RecordAnswer.getInstance().recordAnswer(mQuestion, Integer.parseInt(mAnswer));
+            ConditionalFlowFilter.filterQuestion(mQuestion);
+            setSelection(radioGroup, i);
+        }
+    }
+
+    private void setSelection(RadioGroup radioGroup, int iSelectedRadioId) {
+        if (iSelectedRadioId > -1) {
+            for (@IdRes int i = 1; i <= iSelectedRadioId; i++) {
+                radioGroup.findViewById(i).setSelected(true);
+            }
+            if (iSelectedRadioId < 5) {
+                for (int i = iSelectedRadioId + 1; i <= 5; i++) {
+                    radioGroup.findViewById(i).setSelected(false);
+                }
+            }
+        }
+    }
+
+    int getDrawableResource(int iPosition) {
+        switch (iPosition) {
+            case 1:
+                return R.drawable.star1_selector;
+            case 2:
+                return R.drawable.star2_selector;
+            case 3:
+                return R.drawable.star3_selector;
+            case 4:
+                return R.drawable.star4_selector;
+            case 5:
+                return R.drawable.star5_selector;
+        }
+        return 0;
+    }
 }

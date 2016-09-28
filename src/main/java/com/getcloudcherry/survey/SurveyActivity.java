@@ -32,6 +32,7 @@ import com.getcloudcherry.survey.helper.SurveyCC;
 import com.getcloudcherry.survey.httpclient.SurveyClient;
 import com.getcloudcherry.survey.interfaces.FragmentCallBack;
 import com.getcloudcherry.survey.model.Answer;
+import com.getcloudcherry.survey.model.CustomTextStyle;
 import com.getcloudcherry.survey.model.LoginToken;
 import com.getcloudcherry.survey.model.SurveyQuestions;
 import com.getcloudcherry.survey.model.SurveyResponse;
@@ -221,6 +222,7 @@ public class SurveyActivity extends AppCompatActivity implements FragmentCallBac
                 .thankYouMessage(iSurveyResponse.thankyouText)
                 .showWelcomeMessage(!iSurveyResponse.skipWelcome)
                 .showThankYouMessage(true)
+                .customTextStyle(CustomTextStyle.STYLE_RECTANGLE)
                 .build();
         SurveyCC.getInstance().setConfigFromWeb(aHeaderConfig);
     }

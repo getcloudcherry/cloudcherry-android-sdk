@@ -71,10 +71,10 @@ public class QuestionSmileyRatingFragment extends Fragment implements RadioGroup
         aParams.setMargins((int) Utils.convertDpToPixel(5), (int) Utils.convertDpToPixel(10), (int) Utils.convertDpToPixel(5), (int) Utils.convertDpToPixel(10));
         for (int i = 0; i < 5; i++) {
             RadioButton aRadio = new RadioButton(getActivity());
-            aRadio.setText(getEmijoByUnicode(getEmojiUnicode(i + 1)));
+//            aRadio.setText(getEmijoByUnicode(getEmojiUnicode(i + 1)));
             aRadio.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24);
             aRadio.setId(i + 1);
-            aRadio.setBackgroundResource(R.drawable.multi_select_selector);
+            aRadio.setBackgroundResource(getDrawableResource(i + 1));
             aRadio.setButtonDrawable(android.R.color.transparent);
             aRadio.setGravity(Gravity.CENTER);
             aRadio.setLayoutParams(aParams);
@@ -174,6 +174,22 @@ public class QuestionSmileyRatingFragment extends Fragment implements RadioGroup
                 return 0x1F60A;
             case 5:
                 return 0x1F60D;
+        }
+        return 0;
+    }
+
+    int getDrawableResource(int iPosition) {
+        switch (iPosition) {
+            case 1:
+                return R.drawable.smiley1_selector;
+            case 2:
+                return R.drawable.smiley2_selector;
+            case 3:
+                return R.drawable.smiley3_selector;
+            case 4:
+                return R.drawable.smiley4_selector;
+            case 5:
+                return R.drawable.smiley5_selector;
         }
         return 0;
     }

@@ -14,6 +14,7 @@ import com.getcloudcherry.survey.interfaces.ConditionalChangesCallBack;
 import com.getcloudcherry.survey.interfaces.FragmentCallBack;
 import com.getcloudcherry.survey.interfaces.QuestionCallback;
 import com.getcloudcherry.survey.model.Answer;
+import com.getcloudcherry.survey.model.CustomTextStyle;
 import com.getcloudcherry.survey.model.Data;
 import com.getcloudcherry.survey.model.SurveyQuestions;
 import com.getcloudcherry.survey.model.SurveyResponse;
@@ -73,6 +74,9 @@ public class SurveyCC {
     private SurveyResponse mSurveyResponse;
     private ArrayList<SurveyQuestions> mSurveyQuestions = new ArrayList<>();
     private ArrayList<SurveyQuestions> mConditionalQuestions = new ArrayList<>();
+
+    //Question Type
+    private int CUSTOM_TEXT_STYLE = CustomTextStyle.STYLE_CIRCLE;
 
     //Listeners
     private ArrayList<FragmentCallBack> mFragmentDataCallback = new ArrayList<>();
@@ -143,6 +147,7 @@ public class SurveyCC {
                 FOOTER_PAGE_FONT_PATH = iConfigBuilder.FOOTER_PAGE_FONT_PATH;
             FOOTER_PAGE_FONT_COLOR = iConfigBuilder.FOOTER_PAGE_FONT_COLOR;
             FOOTER_PAGE_FONT_SIZE = iConfigBuilder.FOOTER_PAGE_FONT_SIZE;
+            CUSTOM_TEXT_STYLE = iConfigBuilder.CUSTOM_TEXT_STYLE;
         }
     }
 
@@ -167,6 +172,7 @@ public class SurveyCC {
                 HEADER_LOGO = iConfigBuilder.HEADER_LOGO;
             if (!TextUtils.isEmpty(iConfigBuilder.FOOTER_BACKGROUND_COLOR))
                 FOOTER_BACKGROUND_COLOR = iConfigBuilder.FOOTER_BACKGROUND_COLOR;
+            CUSTOM_TEXT_STYLE = iConfigBuilder.CUSTOM_TEXT_STYLE;
         }
     }
 
@@ -432,6 +438,10 @@ public class SurveyCC {
 
     public int getFooterPageFontColor() {
         return FOOTER_PAGE_FONT_COLOR;
+    }
+
+    public int getCustomTextStyle() {
+        return CUSTOM_TEXT_STYLE;
     }
 
     //***************************Fragment Data Callback*****************************//
