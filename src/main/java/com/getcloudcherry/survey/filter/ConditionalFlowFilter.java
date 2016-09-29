@@ -30,40 +30,42 @@ public class ConditionalFlowFilter {
         int aRemovedCount = 0;
         if (RecordAnswer.getInstance().getAnswerForQuestionId(iQuestion.id) != null)
             for (SurveyQuestions aQuestion : SurveyCC.getInstance().getConditionalSurveyQuestions()) {
-                boolean iSatisfied = false;
-                boolean iFailed = false;
-                for (FilterByQuestions aFilterByQuestion : aQuestion.conditionalFilter.filterquestions) {
-                    if (isAnd(aFilterByQuestion)) {
-                        if (doesSatisfy(aFilterByQuestion) && !iFailed) {
-                            iSatisfied = true;
-                        } else {
-                            iFailed = true;
-                            break;
+                if (aQuestion.conditionalFilter != null) {
+                    boolean iSatisfied = false;
+                    boolean iFailed = false;
+                    for (FilterByQuestions aFilterByQuestion : aQuestion.conditionalFilter.filterquestions) {
+                        if (isAnd(aFilterByQuestion)) {
+                            if (doesSatisfy(aFilterByQuestion) && !iFailed) {
+                                iSatisfied = true;
+                            } else {
+                                iFailed = true;
+                                break;
+                            }
+                        } else if (isOr(aFilterByQuestion)) {
+                            if (doesSatisfy(aFilterByQuestion)) {
+                                iSatisfied = true;
+                                break;
+                            }
                         }
-                    } else if (isOr(aFilterByQuestion)) {
-                        if (doesSatisfy(aFilterByQuestion)) {
-                            iSatisfied = true;
-                            break;
-                        }
-                    }
 
-                }
-                if (iSatisfied && !iFailed) {
-                    if (!SurveyCC.getInstance().getSurveyQuestions().contains(aQuestion)) {
-                        SurveyCC.getInstance().getSurveyQuestions().add(aQuestion);
-                        aAddedCount++;
                     }
-                } else {
-                    if (SurveyCC.getInstance().getSurveyQuestions().contains(aQuestion)) {
-                        aRemovedCount++;
-                        SurveyCC.getInstance().getSurveyQuestions().remove(aQuestion);
-                        RecordAnswer.getInstance().mPartialResponse.remove(aQuestion.id);
-                        RecordAnswer.getInstance().mAnswers.remove(aQuestion.id);
-                        RecordAnalytics.getInstance().mAnalyticsData.remove(aQuestion.id);
+                    if (iSatisfied && !iFailed) {
+                        if (!SurveyCC.getInstance().getSurveyQuestions().contains(aQuestion)) {
+                            SurveyCC.getInstance().getSurveyQuestions().add(aQuestion);
+                            aAddedCount++;
+                        }
+                    } else {
+                        if (SurveyCC.getInstance().getSurveyQuestions().contains(aQuestion)) {
+                            aRemovedCount++;
+                            SurveyCC.getInstance().getSurveyQuestions().remove(aQuestion);
+                            RecordAnswer.getInstance().mPartialResponse.remove(aQuestion.id);
+                            RecordAnswer.getInstance().mAnswers.remove(aQuestion.id);
+                            RecordAnalytics.getInstance().mAnalyticsData.remove(aQuestion.id);
+                        }
                     }
                 }
             }
-        if(aAddedCount > 0 || aRemovedCount > 0) {
+        if (aAddedCount > 0 || aRemovedCount > 0) {
             Constants.logInfo("Conditional Flow", "Added or Removed");
             Collections.sort(SurveyCC.getInstance().getSurveyQuestions(), new SequenceComparaor());
             SurveyCC.getInstance().sendConditionalFLowQuestionsData(SurveyCC.getInstance().getSurveyQuestions().size());
@@ -109,7 +111,8 @@ public class ConditionalFlowFilter {
         return false;
     }
 
-    /** Contains logic to control conditional flow and whether to show or hide the questions based on the user input
+    /**
+     * Contains logic to control conditional flow and whether to show or hide the questions based on the user input
      *
      * @param iFilterByQuestion
      * @return
