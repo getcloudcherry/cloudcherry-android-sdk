@@ -27,6 +27,8 @@ import com.getcloudcherry.survey.helper.SurveyCC;
 import com.getcloudcherry.survey.helper.Utils;
 import com.getcloudcherry.survey.model.SurveyQuestions;
 
+import java.util.ArrayList;
+
 
 /**
  * Fragment to display and handle Star rating type question
@@ -41,6 +43,8 @@ public class QuestionStarRatingFragment extends Fragment implements /*RatingBar.
     private int mCurrentPosition;
     private String mAnswer;
     private boolean isRestored = false;
+    private boolean mToUseDefaultStar;
+    private ArrayList<Integer> mStarRatingSelector;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -59,6 +63,8 @@ public class QuestionStarRatingFragment extends Fragment implements /*RatingBar.
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        mStarRatingSelector = SurveyCC.getInstance().getStarRatingSelector();
+        mToUseDefaultStar = (mStarRatingSelector == null || mStarRatingSelector.size() != 5);
         mQuestionHeaderLayout = (LinearLayout) view.findViewById(R.id.linearHeader);
         mTVTitle = (TextView) view.findViewById(R.id.tvTitle);
         mRadioGroup = (RadioGroup) view.findViewById(R.id.rbgRating);
@@ -81,7 +87,7 @@ public class QuestionStarRatingFragment extends Fragment implements /*RatingBar.
             RadioButton aRadio = new RadioButton(getActivity());
             aRadio.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24);
             aRadio.setId(i + 1);
-            aRadio.setBackgroundResource(getDrawableResource(i + 1));
+            aRadio.setBackgroundResource(getDrawableResource(i));
             aRadio.setButtonDrawable(android.R.color.transparent);
             aRadio.setGravity(Gravity.CENTER);
             aRadio.setLayoutParams(aParams);
@@ -212,18 +218,9 @@ public class QuestionStarRatingFragment extends Fragment implements /*RatingBar.
     }
 
     int getDrawableResource(int iPosition) {
-        switch (iPosition) {
-            case 1:
-                return R.drawable.star1_selector;
-            case 2:
-                return R.drawable.star2_selector;
-            case 3:
-                return R.drawable.star3_selector;
-            case 4:
-                return R.drawable.star4_selector;
-            case 5:
-                return R.drawable.star5_selector;
+        if (!mToUseDefaultStar && mStarRatingSelector != null && iPosition <= mStarRatingSelector.size()) {
+            return mStarRatingSelector.get(iPosition);
         }
-        return 0;
+        return R.drawable.star_selector;
     }
 }
