@@ -36,7 +36,7 @@ public class SurveyCC {
     public static Context mContext;
     private static String mSurveyToken;
     private static boolean mShouldCreate;
-    private static int mCustomTextStyle;
+    private static int mCustomTextStyle = CustomTextStyle.STYLE_CIRCLE;
     private static ArrayList<Integer> mSmileyRatingSelector;
     private static ArrayList<Integer> mStarRatingSelector;
 
@@ -94,6 +94,16 @@ public class SurveyCC {
     /**
      * Initializes the SDK with application context
      *
+     * @param iContext     application context
+     * @param iSurveyToken Survey Token provided by cloud cherry
+     */
+    public static void initialise(Context iContext, String iSurveyToken) {
+        initialise(iContext, iSurveyToken, CustomTextStyle.STYLE_CIRCLE, null, null);
+    }
+
+    /**
+     * Initializes the SDK with application context
+     *
      * @param iContext              application context
      * @param iSurveyToken          Survey Token provided by cloud cherry
      * @param iCustomTextStyle      Style of custom text in single and multi select
@@ -105,13 +115,24 @@ public class SurveyCC {
         mSurveyToken = iSurveyToken;
         mShouldCreate = false;
         getInstance();
-        mCustomTextStyle = iCustomTextStyle;
+        mCustomTextStyle = iCustomTextStyle == 0 ? CustomTextStyle.STYLE_CIRCLE : iCustomTextStyle;
         if (iSmileyRatingSelector != null && iSmileyRatingSelector.size() == 5) {
             mSmileyRatingSelector = iSmileyRatingSelector;
         }
         if (iStarRatingSelector != null && iStarRatingSelector.size() == 5) {
             mStarRatingSelector = iStarRatingSelector;
         }
+    }
+
+    /**
+     * Initializes the SDK with application context
+     *
+     * @param iContext  application context
+     * @param iUsername Username for SDK
+     * @param iPassword Password for SDK
+     */
+    public static void initialise(Context iContext, String iUsername, String iPassword, SurveyToken iTokenConfig) {
+        initialise(iContext, iUsername, iPassword, iTokenConfig, CustomTextStyle.STYLE_CIRCLE, null, null);
     }
 
     /**
