@@ -115,7 +115,7 @@ public class SurveyCC {
         mSurveyToken = iSurveyToken;
         mShouldCreate = false;
         getInstance();
-        mCustomTextStyle = iCustomTextStyle == 0 ? CustomTextStyle.STYLE_CIRCLE : iCustomTextStyle;
+        mCustomTextStyle = (iCustomTextStyle != CustomTextStyle.STYLE_CIRCLE && iCustomTextStyle != CustomTextStyle.STYLE_RECTANGLE) ? CustomTextStyle.STYLE_CIRCLE : iCustomTextStyle;
         if (iSmileyRatingSelector != null && iSmileyRatingSelector.size() == 5) {
             mSmileyRatingSelector = iSmileyRatingSelector;
         }
