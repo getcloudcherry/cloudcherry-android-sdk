@@ -26,39 +26,32 @@ SurveyCC.initialise(this, "CloudCherry_Username", "CloudCherry_Password", aToken
 
 **Setting style for custom text icons**
 
-User can pass `CustomTextStyle.STYLE_CIRCLE`, `CustomTextStyle.STYLE_RECTANGLE` while initialising SDK for custom text icons. User can pass `0` to use default style i.e. `CustomTextStyle.STYLE_CIRCLE`.
+User can configure custom text style by passing CustomTextStyle.STYLE_CIRCLE or CustomTextStyle.STYLE_RECTANGLE to setCustomTextStyle() method. Skip setting the property to use default style.
 
 ```Java
-//Static token:
-SurveyCC.initialise(this, "STATIC_TOKEN", CustomTextStyle.STYLE_CIRCLE, null, null);
-
-//Dynamic token:
-SurveyCC.initialise(this, "CloudCherry Username", "CloudCherry Password”, SurveyToken iTokenConfig, CustomTextStyle.STYLE_CIRCLE, null, null);
-```
-
-**Setting custom assets for smiley rating and star rating**
-
-User can set custom assets for smiley rating and star rating by passing `ArrayList` of resource IDs of your selector drawables with selected and unselected state while initialising SDK. User can pass `null` to use default style i.e. emoji unicodes for smiley rating and yellow star asset for star rating
-
-```Java
-//Static token:
-SurveyCC.initialise(this, "STATIC_TOKEN", CustomTextStyle.STYLE_CIRCLE, aSmileyRatingSelector, aStarRatingSelector);
-
-//Dynamic token:
-SurveyCC.initialise(this, "CloudCherry Username", "CloudCherry Password”, SurveyToken iTokenConfig, CustomTextStyle.STYLE_CIRCLE, aSmileyRatingSelector, aStarRatingSelector);
+SurveyCC.getInstance().setCustomTextStyle(CustomTextStyle.STYLE_CIRCLE);
 ```
 
 **Note:**
 
-- If any of the `ArrayList` does not contain 5 images, the SDK will switch to default style
+- Set the style property before triggering SDK.
 
-**Triggering Survey**
+**Setting custom assets for smiley rating and star rating**
 
-- Finally start the survey by using the underlying syntax (Note: Here 'self' is the controller on which you wish to present the survey):
+User can set custom assets for smiley rating and star rating by passing `ArrayList` of resource IDs of your selector drawables with selected and unselected state to methods `setSmileyRatingSelector()` and `setStarRatingSelector()` for smiley rating and star rating respectively. Skip setting the respective property to use default style.
 
 ```Java
-SurveyCC.getInstance().trigger();
+//Smiley Rating:
+SurveyCC.getInstance().setSmileyRatingSelector(aSmileyRatingSelector);
+
+//Star Rating:
+SurveyCC.getInstance().setStarRatingSelector(aStarRatingSelector);
 ```
+
+**Note:**
+
+- If the size of ArrayList containing resource IDs is not exactly 5 then default style will be used.
+- Set the style property before triggering SDK.
 
 **Setting up pre-fills in SDK**
 
@@ -69,6 +62,13 @@ HashMap<String, Object> aAnswers = new HashMap<>();
 aAnswers.put("preFillMobile", "1234567890");
 aAnswers.put("preFillEmail", "abc@gmail.com");
 SurveyCC.getInstance().setPreFill(aAnswers);
+```
+
+**Triggering Survey**
+
+- Finally start the survey by using the underlying syntax (Note: Here 'self' is the controller on which you wish to present the survey):
+
+```Java
 SurveyCC.getInstance().trigger();
 ```
 
