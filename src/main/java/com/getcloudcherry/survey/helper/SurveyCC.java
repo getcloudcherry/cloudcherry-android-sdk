@@ -14,6 +14,7 @@ import com.getcloudcherry.survey.interfaces.ConditionalChangesCallBack;
 import com.getcloudcherry.survey.interfaces.FragmentCallBack;
 import com.getcloudcherry.survey.interfaces.QuestionCallback;
 import com.getcloudcherry.survey.model.Answer;
+import com.getcloudcherry.survey.model.CustomTextStyle;
 import com.getcloudcherry.survey.model.Data;
 import com.getcloudcherry.survey.model.SurveyQuestions;
 import com.getcloudcherry.survey.model.SurveyResponse;
@@ -34,6 +35,8 @@ public class SurveyCC {
     public static Context mContext;
     private static String mSurveyToken;
     private static boolean mShouldCreate;
+    private static ArrayList<Integer> mSmileyRatingSelector;
+    private static ArrayList<Integer> mStarRatingSelector;
 
     private static String mUserName;
     private static String mPassword;
@@ -74,6 +77,9 @@ public class SurveyCC {
     private ArrayList<SurveyQuestions> mSurveyQuestions = new ArrayList<>();
     private ArrayList<SurveyQuestions> mConditionalQuestions = new ArrayList<>();
 
+    //Question Type
+    private int CUSTOM_TEXT_STYLE = CustomTextStyle.STYLE_CIRCLE;
+
     //Listeners
     private ArrayList<FragmentCallBack> mFragmentDataCallback = new ArrayList<>();
     private ArrayList<QuestionCallback> mQuestionCallbacks = new ArrayList<>();
@@ -99,7 +105,9 @@ public class SurveyCC {
     /**
      * Initializes the SDK with application context
      *
-     * @param iContext application context
+     * @param iContext  application context
+     * @param iUsername Username for SDK
+     * @param iPassword Password for SDK
      */
     public static void initialise(Context iContext, String iUsername, String iPassword, SurveyToken iTokenConfig) {
         setCredentials(iUsername, iPassword);
@@ -111,6 +119,22 @@ public class SurveyCC {
     private static void setCredentials(String iUserName, String iPassword) {
         mUserName = iUserName;
         mPassword = iPassword;
+    }
+
+    public void setCustomTextStyle(int iCustomTextStyle) {
+        CUSTOM_TEXT_STYLE = (iCustomTextStyle != CustomTextStyle.STYLE_CIRCLE && iCustomTextStyle != CustomTextStyle.STYLE_RECTANGLE) ? CustomTextStyle.STYLE_CIRCLE : iCustomTextStyle;
+    }
+
+    public void setSmileyRatingSelector(ArrayList<Integer> iSmileyRatingSelector) {
+        if (iSmileyRatingSelector != null && iSmileyRatingSelector.size() == 5) {
+            mSmileyRatingSelector = iSmileyRatingSelector;
+        }
+    }
+
+    public void setStarRatingSelector(ArrayList<Integer> iStarRatingSelector) {
+        if (iStarRatingSelector != null && iStarRatingSelector.size() == 5) {
+            mStarRatingSelector = iStarRatingSelector;
+        }
     }
 
     /**
@@ -432,6 +456,18 @@ public class SurveyCC {
 
     public int getFooterPageFontColor() {
         return FOOTER_PAGE_FONT_COLOR;
+    }
+
+    public int getCustomTextStyle() {
+        return CUSTOM_TEXT_STYLE;
+    }
+
+    public ArrayList<Integer> getSmileyRatingSelector() {
+        return mSmileyRatingSelector;
+    }
+
+    public ArrayList<Integer> getStarRatingSelector() {
+        return mStarRatingSelector;
     }
 
     //***************************Fragment Data Callback*****************************//

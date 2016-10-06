@@ -13,18 +13,19 @@ import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.LinearLayout;
-import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.getcloudcherry.survey.R;
 import com.getcloudcherry.survey.SurveyActivity;
+import com.getcloudcherry.survey.customviews.FlowLayout;
 import com.getcloudcherry.survey.filter.ConditionalFlowFilter;
 import com.getcloudcherry.survey.filter.ConditionalTextFilter;
 import com.getcloudcherry.survey.helper.Constants;
 import com.getcloudcherry.survey.helper.RecordAnswer;
 import com.getcloudcherry.survey.helper.SurveyCC;
 import com.getcloudcherry.survey.helper.Utils;
+import com.getcloudcherry.survey.model.CustomTextStyle;
 import com.getcloudcherry.survey.model.SurveyQuestions;
 
 import java.util.ArrayList;
@@ -36,7 +37,8 @@ import java.util.ArrayList;
 public class QuestionMultiselectFragment extends Fragment implements CompoundButton.OnCheckedChangeListener {
     private SurveyQuestions mQuestion;
     private TextView mTVTitle;
-    private LinearLayout mQuestionHeaderLayout, mLinearMultiSelect;
+    private LinearLayout mQuestionHeaderLayout;//, mLinearMultiSelect;
+    private FlowLayout mLinearMultiSelect;
     private String mAnswer;
     private boolean isLastPage;
     private int mCurrentPosition;
@@ -59,7 +61,8 @@ public class QuestionMultiselectFragment extends Fragment implements CompoundBut
         //Header
         mQuestionHeaderLayout = (LinearLayout) view.findViewById(R.id.linearHeader);
         mTVTitle = (TextView) view.findViewById(R.id.tvTitle);
-        mLinearMultiSelect = (LinearLayout) view.findViewById(R.id.linearMultiselect);
+//        mLinearMultiSelect = (LinearLayout) view.findViewById(R.id.linearMultiselect);
+        mLinearMultiSelect = (FlowLayout) view.findViewById(R.id.linearMultiselect);
         initializeViewsWithConfig();
         createMultiSelect();
         mTVTitle.setText(mQuestion.text);
@@ -69,17 +72,20 @@ public class QuestionMultiselectFragment extends Fragment implements CompoundBut
      * Dynamically generate custom multi select view
      */
     private void createMultiSelect() {
-        RadioGroup.LayoutParams aParams = new RadioGroup.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
-        aParams.gravity = Gravity.TOP;
+//        LinearLayout.LayoutParams aParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        FlowLayout.LayoutParams aParams = new FlowLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        aParams.setMargins((int) Utils.convertDpToPixel(5), (int) Utils.convertDpToPixel(5), (int) Utils.convertDpToPixel(5), (int) Utils.convertDpToPixel(5));
+//        RadioGroup.LayoutParams aParams = new RadioGroup.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+//        aParams.gravity = Gravity.TOP;
         if (mQuestion.multiSelect != null) {
             for (int i = 0; i < mQuestion.multiSelect.size(); i++) {
                 CheckBox aCheckBox = new CheckBox(getActivity());
                 aCheckBox.setText(mQuestion.multiSelect.get(i));
                 aCheckBox.setId(i + 1);
-                aCheckBox.setPadding((int) Utils.convertDpToPixel(5), (int) Utils.convertDpToPixel(5), (int) Utils.convertDpToPixel(5), (int) Utils.convertDpToPixel(5));
-                aCheckBox.setBackgroundResource(android.R.color.transparent);
+                aCheckBox.setPadding((int) Utils.convertDpToPixel(10), (int) Utils.convertDpToPixel(5), (int) Utils.convertDpToPixel(10), (int) Utils.convertDpToPixel(5));
+                aCheckBox.setBackgroundResource(SurveyCC.getInstance().getCustomTextStyle() == CustomTextStyle.STYLE_CIRCLE ? android.R.color.transparent : R.drawable.multi_select_selector_rectangle);
                 aCheckBox.setButtonDrawable(android.R.color.transparent);
-                aCheckBox.setCompoundDrawablesWithIntrinsicBounds(0, R.drawable.multi_select_selector, 0, 0);
+                aCheckBox.setCompoundDrawablesWithIntrinsicBounds(0, SurveyCC.getInstance().getCustomTextStyle() == CustomTextStyle.STYLE_CIRCLE ? R.drawable.multi_select_selector_circle : 0, 0, 0);
                 aCheckBox.setGravity(Gravity.CENTER);
                 aCheckBox.setTextSize(TypedValue.COMPLEX_UNIT_SP, 10);
                 aCheckBox.setLayoutParams(aParams);

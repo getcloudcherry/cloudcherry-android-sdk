@@ -222,6 +222,14 @@ public class MultiPageFragment extends Fragment implements View.OnClickListener,
                 aFragment = new QuestionTextAreaFragment();
                 aFragment.setArguments(aBundle);
                 mFragments.put(SurveyCC.getInstance().getSurveyQuestions().get(position).id, aFragment);
+            } else if (mFragments.get(SurveyCC.getInstance().getSurveyQuestions().get(position).id) == null && SurveyCC.getInstance().getSurveyQuestions().get(position).displayType.equals(QuestionTypes.TYPE_SINGLE_LINE_TEXT)) {
+                aFragment = new QuestionTextFragment();
+                aFragment.setArguments(aBundle);
+                mFragments.put(SurveyCC.getInstance().getSurveyQuestions().get(position).id, aFragment);
+            } else if (mFragments.get(SurveyCC.getInstance().getSurveyQuestions().get(position).id) == null && SurveyCC.getInstance().getSurveyQuestions().get(position).displayType.equals(QuestionTypes.TYPE_SINGLE_LINE_NUMBER)) {
+                aFragment = new QuestionTextFragment();
+                aFragment.setArguments(aBundle);
+                mFragments.put(SurveyCC.getInstance().getSurveyQuestions().get(position).id, aFragment);
             } else if (mFragments.get(SurveyCC.getInstance().getSurveyQuestions().get(position).id) == null && SurveyCC.getInstance().getSurveyQuestions().get(position).displayType.equals(QuestionTypes.TYPE_RATING_STAR)) {
                 aFragment = new QuestionStarRatingFragment();
                 aFragment.setArguments(aBundle);
@@ -264,6 +272,8 @@ public class MultiPageFragment extends Fragment implements View.OnClickListener,
             return ((QuestionNPSFragment) mAdapter.getItem(mViewPager.getCurrentItem())).validateAnswer();
         } else if (mAdapter.getItem(mViewPager.getCurrentItem()) instanceof QuestionTextAreaFragment) {
             return ((QuestionTextAreaFragment) mAdapter.getItem(mViewPager.getCurrentItem())).validateAnswer();
+        } else if (mAdapter.getItem(mViewPager.getCurrentItem()) instanceof QuestionTextFragment) {
+            return ((QuestionTextFragment) mAdapter.getItem(mViewPager.getCurrentItem())).validateAnswer();
         } else if (mAdapter.getItem(mViewPager.getCurrentItem()) instanceof QuestionStarRatingFragment) {
             return ((QuestionStarRatingFragment) mAdapter.getItem(mViewPager.getCurrentItem())).validateAnswer();
         } else if (mAdapter.getItem(mViewPager.getCurrentItem()) instanceof QuestionMultiselectFragment) {

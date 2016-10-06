@@ -26,6 +26,8 @@ import com.getcloudcherry.survey.helper.SurveyCC;
 import com.getcloudcherry.survey.helper.Utils;
 import com.getcloudcherry.survey.model.SurveyQuestions;
 
+import java.util.ArrayList;
+
 
 /**
  * Fragment to display and handle Star rating type question
@@ -38,6 +40,8 @@ public class QuestionSmileyRatingFragment extends Fragment implements RadioGroup
     private String mAnswer;
     private boolean isLastPage;
     private int mCurrentPosition;
+    private boolean mToUseDefaultSmiley;
+    private ArrayList<Integer> mSmileyRatingSelector;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -53,6 +57,8 @@ public class QuestionSmileyRatingFragment extends Fragment implements RadioGroup
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        mSmileyRatingSelector = SurveyCC.getInstance().getSmileyRatingSelector();
+        mToUseDefaultSmiley = (mSmileyRatingSelector == null || mSmileyRatingSelector.size() != 5);
         //Header
         mQuestionHeaderLayout = (LinearLayout) view.findViewById(R.id.linearHeader);
         mTVTitle = (TextView) view.findViewById(R.id.tvTitle);
@@ -71,10 +77,11 @@ public class QuestionSmileyRatingFragment extends Fragment implements RadioGroup
         aParams.setMargins((int) Utils.convertDpToPixel(5), (int) Utils.convertDpToPixel(10), (int) Utils.convertDpToPixel(5), (int) Utils.convertDpToPixel(10));
         for (int i = 0; i < 5; i++) {
             RadioButton aRadio = new RadioButton(getActivity());
-            aRadio.setText(getEmijoByUnicode(getEmojiUnicode(i + 1)));
+            if (mToUseDefaultSmiley)
+                aRadio.setText(getEmijoByUnicode(getEmojiUnicode(i + 1)));
             aRadio.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24);
             aRadio.setId(i + 1);
-            aRadio.setBackgroundResource(R.drawable.multi_select_selector);
+            aRadio.setBackgroundResource(mToUseDefaultSmiley ? R.drawable.multi_select_selector_circle : getDrawableResource(i));
             aRadio.setButtonDrawable(android.R.color.transparent);
             aRadio.setGravity(Gravity.CENTER);
             aRadio.setLayoutParams(aParams);
@@ -174,6 +181,13 @@ public class QuestionSmileyRatingFragment extends Fragment implements RadioGroup
                 return 0x1F60A;
             case 5:
                 return 0x1F60D;
+        }
+        return 0;
+    }
+
+    int getDrawableResource(int iPosition) {
+        if (mSmileyRatingSelector != null && iPosition <= mSmileyRatingSelector.size()) {
+            return mSmileyRatingSelector.get(iPosition);
         }
         return 0;
     }

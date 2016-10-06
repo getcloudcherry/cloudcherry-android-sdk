@@ -4,44 +4,34 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.text.TextUtils;
-import android.util.Log;
+import android.text.InputType;
 import android.util.TypedValue;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.LinearLayout;
-import android.widget.RadioButton;
-import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.getcloudcherry.survey.R;
 import com.getcloudcherry.survey.SurveyActivity;
-import com.getcloudcherry.survey.customviews.FlowLayout;
-import com.getcloudcherry.survey.customviews.GRadioGroup;
 import com.getcloudcherry.survey.filter.ConditionalFlowFilter;
 import com.getcloudcherry.survey.filter.ConditionalTextFilter;
-import com.getcloudcherry.survey.helper.Constants;
+import com.getcloudcherry.survey.filter.QuestionTypes;
 import com.getcloudcherry.survey.helper.RecordAnswer;
 import com.getcloudcherry.survey.helper.SurveyCC;
-import com.getcloudcherry.survey.helper.Utils;
-import com.getcloudcherry.survey.model.CustomTextStyle;
 import com.getcloudcherry.survey.model.SurveyQuestions;
 
 
 /**
- * Fragment to display and handle Single Select type question
+ * Fragment to display and handle MultilineText type question
  */
-public class QuestionSelectFragment extends Fragment implements RadioGroup.OnCheckedChangeListener {
-    //    private RadioGroup mRadioGroup;
-    private GRadioGroup mRadioGroup;
-    private FlowLayout mFlowLayout;
+public class QuestionTextFragment extends Fragment {
+    private EditText mETAnswer;
     private SurveyQuestions mQuestion;
     private TextView mTVTitle;
     private LinearLayout mQuestionHeaderLayout;
-    private String mAnswer;
     private boolean isLastPage;
     private int mCurrentPosition;
 
@@ -53,48 +43,38 @@ public class QuestionSelectFragment extends Fragment implements RadioGroup.OnChe
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-//        return inflater.inflate(R.layout.fragment_nps_question, container, false);
-        return inflater.inflate(R.layout.fragment_multiselect_question, container, false);
+        return inflater.inflate(R.layout.fragment_textarea_question, container, false);
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString(mQuestion.id, mETAnswer.getText().toString());
+    }
+
+    @Override
+    public void onViewStateRestored(@Nullable Bundle savedInstanceState) {
+        super.onViewStateRestored(savedInstanceState);
+        if (savedInstanceState != null) {
+            String aAnswer = savedInstanceState.getString(mQuestion.id, "");
+            mETAnswer.setText(aAnswer);
+            mETAnswer.setSelection(aAnswer.length());
+        }
+
     }
 
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        //Header
         mQuestionHeaderLayout = (LinearLayout) view.findViewById(R.id.linearHeader);
         mTVTitle = (TextView) view.findViewById(R.id.tvTitle);
-        mFlowLayout = (FlowLayout) view.findViewById(R.id.linearMultiselect);
-//        mRadioGroup = (RadioGroup) view.findViewById(R.id.rbgRating);
-//        mFlowLayout.addView(mRadioGroup);
+        mETAnswer = (EditText) view.findViewById(R.id.etEditType);
         initializeViewsWithConfig();
-//        mRadioGroup.setOnCheckedChangeListener(this);
-        mRadioGroup = new GRadioGroup();
-        createSingleSelect();
         mTVTitle.setText(mQuestion.text);
-    }
-
-    /**
-     * Dynamically generate custom Single select view
-     */
-    private void createSingleSelect() {
-//        RadioGroup.LayoutParams aParams = new RadioGroup.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
-//        aParams.gravity = Gravity.TOP;
-        FlowLayout.LayoutParams aParams = new FlowLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        aParams.setMargins((int) Utils.convertDpToPixel(5), (int) Utils.convertDpToPixel(5), (int) Utils.convertDpToPixel(5), (int) Utils.convertDpToPixel(5));
-        for (int i = 0; i < mQuestion.multiSelect.size(); i++) {
-            RadioButton aRadio = new RadioButton(getActivity());
-            aRadio.setText(mQuestion.multiSelect.get(i));
-            aRadio.setId(i + 1);
-            aRadio.setPadding((int) Utils.convertDpToPixel(5), (int) Utils.convertDpToPixel(5), (int) Utils.convertDpToPixel(5), (int) Utils.convertDpToPixel(5));
-            aRadio.setBackgroundResource(SurveyCC.getInstance().getCustomTextStyle() == CustomTextStyle.STYLE_CIRCLE ? android.R.color.transparent : R.drawable.multi_select_selector_rectangle);
-            aRadio.setButtonDrawable(android.R.color.transparent);
-            aRadio.setCompoundDrawablesWithIntrinsicBounds(0, SurveyCC.getInstance().getCustomTextStyle() == CustomTextStyle.STYLE_CIRCLE ? R.drawable.multi_select_selector_circle : 0, 0, 0);
-            aRadio.setGravity(Gravity.CENTER);
-            aRadio.setTextSize(TypedValue.COMPLEX_UNIT_SP, 10);
-            aRadio.setLayoutParams(aParams);
-            mFlowLayout.addView(aRadio);
-            mRadioGroup.addRadioButton(aRadio);
-        }
+        if (mQuestion.displayType.equals(QuestionTypes.TYPE_SINGLE_LINE_TEXT))
+            mETAnswer.setInputType(InputType.TYPE_CLASS_TEXT);
+        else if (mQuestion.displayType.equals(QuestionTypes.TYPE_SINGLE_LINE_NUMBER))
+            mETAnswer.setInputType(InputType.TYPE_CLASS_NUMBER);
     }
 
     /**
@@ -117,18 +97,23 @@ public class QuestionSelectFragment extends Fragment implements RadioGroup.OnChe
     /**
      * Method to validate if the answer has been provided by the user only when the question has isRequired = true
      *
-     * @return true or false
+     * @return boolean
      */
     public boolean validateAnswer() {
         if (mQuestion.isRequired) {
-            if (TextUtils.isEmpty(mAnswer)) {
+            if (mETAnswer.getText().toString().trim().length() == 0) {
                 showToast(getString(R.string.validate_answer));
                 return false;
             } else {
+                RecordAnswer.getInstance().recordAnswer(mQuestion, mETAnswer.getText().toString().trim());
                 submitPartial();
             }
         } else {
-            submitPartial();
+            RecordAnswer.getInstance().recordAnswer(mQuestion, mETAnswer.getText().toString().trim());
+            // If partial response is enabled then capture
+            if (SurveyCC.getInstance().isPartialCapturing()) {
+                submitPartial();
+            }
         }
         return true;
     }
@@ -137,8 +122,11 @@ public class QuestionSelectFragment extends Fragment implements RadioGroup.OnChe
      * Contains logic to call the Partial response API to submit partial response
      */
     void submitPartial() {
+        ConditionalFlowFilter.filterQuestion(mQuestion);
         if (SurveyCC.getInstance().isPartialCapturing()) {
-            ((SurveyActivity) getActivity()).submitAnswerPartial(isLastPage, RecordAnswer.getInstance().getPartialAnswerForQuestionId(mQuestion.id));
+            if (RecordAnswer.getInstance().getPartialAnswerForQuestionId(mQuestion.id).size() > 0)
+                ((SurveyActivity) getActivity()).submitAnswerPartial(isLastPage, RecordAnswer.getInstance().getPartialAnswerForQuestionId(mQuestion.id));
+
         }
     }
 
@@ -160,17 +148,6 @@ public class QuestionSelectFragment extends Fragment implements RadioGroup.OnChe
             mQuestion = aBundle.getParcelable(MultiPageFragment.EXTRAS_QUESTION);
             mCurrentPosition = aBundle.getInt(MultiPageFragment.EXTRAS_POSITION);
             isLastPage = (mCurrentPosition == (SurveyCC.getInstance().getSurveyQuestions().size() - 1));
-        }
-    }
-
-    @Override
-    public void onCheckedChanged(RadioGroup radioGroup, int i) {
-        Log.i("Radio", i + "");
-        if (radioGroup.findViewById(i).isPressed()) {
-            mAnswer = ((RadioButton) radioGroup.findViewById(i)).getText().toString();
-            Constants.logInfo("Answer", mAnswer);
-            RecordAnswer.getInstance().recordAnswer(mQuestion, mAnswer);
-            ConditionalFlowFilter.filterQuestion(mQuestion);
         }
     }
 

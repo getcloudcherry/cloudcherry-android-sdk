@@ -29,7 +29,7 @@ public class ConditionalTextFilter {
             return aConditionalText;
         } else {
             for (LeadingOption aOption : iQuestion.leadingDisplayTexts) {
-                if (aOption.filter != null && aOption.filter.filterquestions != null) {
+                if (aOption != null && aOption.filter != null && aOption.filter.filterquestions != null) {
                     boolean iSatisfied = false;
                     boolean iFailed = false;
                     for (FilterByQuestions aFilterByQuestion : aOption.filter.filterquestions) {

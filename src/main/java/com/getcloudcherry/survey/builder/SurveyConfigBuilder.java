@@ -3,6 +3,7 @@ package com.getcloudcherry.survey.builder;
 import android.text.TextUtils;
 
 import com.getcloudcherry.survey.R;
+import com.getcloudcherry.survey.model.CustomTextStyle;
 
 /**
  * Created by riteshdubey on 7/30/16.
@@ -43,6 +44,9 @@ public class SurveyConfigBuilder {
     public int CONTENT_FONT_SIZE = 16;
     public int CONTENT_FONT_COLOR = R.color.colorPrimary;
 
+    //Question Type
+    public int CUSTOM_TEXT_STYLE = CustomTextStyle.STYLE_CIRCLE;
+
     public static class Builder {
 
         public String welcomeMessage = "";
@@ -75,6 +79,9 @@ public class SurveyConfigBuilder {
         private String contentFontPath;
         private int contentFontSize;
         private int contentFontColor;
+
+        //QuestionType
+        private int customTextStyle;
 
         /**
          * Builder method for setting welcome message
@@ -275,6 +282,7 @@ public class SurveyConfigBuilder {
         }
 
         // Page Config
+
         /**
          * Builder method for setting the custom font path for the footer pagination
          *
@@ -352,6 +360,11 @@ public class SurveyConfigBuilder {
             return this;
         }
 
+        public Builder customTextStyle(int iStyle) {
+            this.customTextStyle = iStyle;
+            return this;
+        }
+
 
         //return fully build object
         public SurveyConfigBuilder build() {
@@ -410,9 +423,13 @@ public class SurveyConfigBuilder {
         if (builder.contentFontColor != 0)
             this.CONTENT_FONT_COLOR = builder.contentFontColor;
 
-        if(!TextUtils.isEmpty(builder.welcomeMessage))
+        //Question Type
+        if (builder.customTextStyle != 0)
+            this.CUSTOM_TEXT_STYLE = builder.customTextStyle;
+
+        if (!TextUtils.isEmpty(builder.welcomeMessage))
             this.WELCOME_MESSAGE = builder.welcomeMessage;
-        if(!TextUtils.isEmpty(builder.thanksMessage))
+        if (!TextUtils.isEmpty(builder.thanksMessage))
             this.THANKS_MESSAGE = builder.thanksMessage;
         this.SHOW_THANKS_MESSAGE = builder.showThanksMessage;
         this.SHOW_WELCOME_MESSAGE = builder.showWelcomeMessage;

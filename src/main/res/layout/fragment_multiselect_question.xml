@@ -27,20 +27,31 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="center"
+        android:isScrollContainer="true"
         android:orientation="vertical"
         android:paddingBottom="@dimen/margin_16"
         android:paddingLeft="@dimen/margin_8"
         android:paddingRight="@dimen/margin_8"
         android:paddingTop="@dimen/margin_8">
 
-        <LinearLayout
+        <!--<LinearLayout-->
+        <!--android:id="@+id/linearMultiselect"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_gravity="center"-->
+        <!--android:orientation="horizontal">-->
+
+        <!--</LinearLayout>-->
+
+        <com.getcloudcherry.survey.customviews.FlowLayout
             android:id="@+id/linearMultiselect"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_gravity="center">
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:orientation="horizontal">
 
-        </LinearLayout>
+        </com.getcloudcherry.survey.customviews.FlowLayout>
     </LinearLayout>
 
 </LinearLayout>

@@ -27,7 +27,7 @@ public class RecordAnswer {
     public Map<String, Object> mPreFillTags = new HashMap<>();
     // Used to store pre-fill answer objects mapped to question id
     public Map<String, Answer> mPreFillAnswers = new HashMap<>();
-    private static final String DEVICE_ID = "mobile";
+    private static final String DEVICE_ID = "InApp-Droid";
 
     /**
      * Gets the singleton instance of this class

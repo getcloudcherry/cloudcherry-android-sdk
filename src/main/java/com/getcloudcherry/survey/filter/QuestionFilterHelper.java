@@ -37,7 +37,7 @@ public class QuestionFilterHelper {
             if (QuestionTypes.isSupportedQuestion(aQuestion) && !aQuestion.isRetired) {
                 if (!RecordAnswer.getInstance().checkIfPreFillExists(aQuestion) && !aQuestion.staffFill && !aQuestion.apiFill) {
                     Log.i("Filtered Question", aQuestion.toString());
-                    if (aQuestion.conditionalFilter.filterquestions == null || aQuestion.conditionalFilter.filterquestions.size() == 0) {
+                    if (aQuestion.conditionalFilter != null && (aQuestion.conditionalFilter.filterquestions == null || aQuestion.conditionalFilter.filterquestions.size() == 0)) {
                         aFilteredQuestions.add(aQuestion);
                     } else {
                         SurveyCC.getInstance().addConditionalSurveyQuestions(aQuestion);
