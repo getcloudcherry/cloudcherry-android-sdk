@@ -2,7 +2,6 @@ package com.getcloudcherry.survey.helper;
 
 import android.content.Context;
 import android.content.Intent;
-import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 
@@ -36,7 +35,6 @@ public class SurveyCC {
     public static Context mContext;
     private static String mSurveyToken;
     private static boolean mShouldCreate;
-    private static int mCustomTextStyle = CustomTextStyle.STYLE_CIRCLE;
     private static ArrayList<Integer> mSmileyRatingSelector;
     private static ArrayList<Integer> mStarRatingSelector;
 
@@ -98,30 +96,10 @@ public class SurveyCC {
      * @param iSurveyToken Survey Token provided by cloud cherry
      */
     public static void initialise(Context iContext, String iSurveyToken) {
-        initialise(iContext, iSurveyToken, CustomTextStyle.STYLE_CIRCLE, null, null);
-    }
-
-    /**
-     * Initializes the SDK with application context
-     *
-     * @param iContext              application context
-     * @param iSurveyToken          Survey Token provided by cloud cherry
-     * @param iCustomTextStyle      Style of custom text in single and multi select
-     * @param iSmileyRatingSelector ArrayList of 5 selector drawable resources for smiley rating in order of worst to best, pass null to use default
-     * @param iStarRatingSelector   ArrayList of 5 selector drawable resources for star rating in order of worst to best, pass null to use default
-     */
-    public static void initialise(Context iContext, String iSurveyToken, int iCustomTextStyle, @Nullable ArrayList<Integer> iSmileyRatingSelector, @Nullable ArrayList<Integer> iStarRatingSelector) {
         mContext = iContext;
         mSurveyToken = iSurveyToken;
         mShouldCreate = false;
         getInstance();
-        mCustomTextStyle = (iCustomTextStyle != CustomTextStyle.STYLE_CIRCLE && iCustomTextStyle != CustomTextStyle.STYLE_RECTANGLE) ? CustomTextStyle.STYLE_CIRCLE : iCustomTextStyle;
-        if (iSmileyRatingSelector != null && iSmileyRatingSelector.size() == 5) {
-            mSmileyRatingSelector = iSmileyRatingSelector;
-        }
-        if (iStarRatingSelector != null && iStarRatingSelector.size() == 5) {
-            mStarRatingSelector = iStarRatingSelector;
-        }
     }
 
     /**
@@ -132,29 +110,31 @@ public class SurveyCC {
      * @param iPassword Password for SDK
      */
     public static void initialise(Context iContext, String iUsername, String iPassword, SurveyToken iTokenConfig) {
-        initialise(iContext, iUsername, iPassword, iTokenConfig, CustomTextStyle.STYLE_CIRCLE, null, null);
-    }
-
-    /**
-     * Initializes the SDK with application context
-     *
-     * @param iContext              application context
-     * @param iUsername             Username for SDK
-     * @param iPassword             Password for SDK
-     * @param iCustomTextStyle      Style of custom text in single and multi select
-     * @param iSmileyRatingSelector ArrayList of 5 selector drawable resources for smiley rating in order of worst to best, pass null to use default
-     * @param iStarRatingSelector   ArrayList of 5 selector drawable resources for star rating in order of worst to best, pass null to use default
-     */
-    public static void initialise(Context iContext, String iUsername, String iPassword, SurveyToken iTokenConfig, int iCustomTextStyle, @Nullable ArrayList<Integer> iSmileyRatingSelector, @Nullable ArrayList<Integer> iStarRatingSelector) {
         setCredentials(iUsername, iPassword);
         mTokenConfig = iTokenConfig;
-        initialise(iContext, null, iCustomTextStyle, iSmileyRatingSelector, iStarRatingSelector);
+        initialise(iContext, null);
         mShouldCreate = true;
     }
 
     private static void setCredentials(String iUserName, String iPassword) {
         mUserName = iUserName;
         mPassword = iPassword;
+    }
+
+    public void setCustomTextStyle(int iCustomTextStyle) {
+        CUSTOM_TEXT_STYLE = (iCustomTextStyle != CustomTextStyle.STYLE_CIRCLE && iCustomTextStyle != CustomTextStyle.STYLE_RECTANGLE) ? CustomTextStyle.STYLE_CIRCLE : iCustomTextStyle;
+    }
+
+    public void setSmileyRatingSelector(ArrayList<Integer> iSmileyRatingSelector) {
+        if (iSmileyRatingSelector != null && iSmileyRatingSelector.size() == 5) {
+            mSmileyRatingSelector = iSmileyRatingSelector;
+        }
+    }
+
+    public void setStarRatingSelector(ArrayList<Integer> iStarRatingSelector) {
+        if (iStarRatingSelector != null && iStarRatingSelector.size() == 5) {
+            mStarRatingSelector = iStarRatingSelector;
+        }
     }
 
     /**
@@ -187,7 +167,6 @@ public class SurveyCC {
                 FOOTER_PAGE_FONT_PATH = iConfigBuilder.FOOTER_PAGE_FONT_PATH;
             FOOTER_PAGE_FONT_COLOR = iConfigBuilder.FOOTER_PAGE_FONT_COLOR;
             FOOTER_PAGE_FONT_SIZE = iConfigBuilder.FOOTER_PAGE_FONT_SIZE;
-            CUSTOM_TEXT_STYLE = mCustomTextStyle;
         }
     }
 
@@ -212,7 +191,6 @@ public class SurveyCC {
                 HEADER_LOGO = iConfigBuilder.HEADER_LOGO;
             if (!TextUtils.isEmpty(iConfigBuilder.FOOTER_BACKGROUND_COLOR))
                 FOOTER_BACKGROUND_COLOR = iConfigBuilder.FOOTER_BACKGROUND_COLOR;
-            CUSTOM_TEXT_STYLE = mCustomTextStyle;
         }
     }
 
