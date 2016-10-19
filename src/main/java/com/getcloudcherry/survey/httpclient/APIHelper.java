@@ -46,7 +46,7 @@ public class APIHelper {
     }
 
     public static String getSystemTimeInBelowFormat() {
-        String timestamp = new SimpleDateFormat("yyyy-mm-dd'T'HH:mm:ss.SSS'Z'").format(new Date());
+        String timestamp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").format(new Date());
         return timestamp;
     }
 }
