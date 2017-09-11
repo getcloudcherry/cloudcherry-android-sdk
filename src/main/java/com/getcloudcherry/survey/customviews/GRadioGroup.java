@@ -11,6 +11,7 @@ import java.util.List;
 
 public class GRadioGroup {
 
+    OnCheckedChangeListener mListener;
     List<RadioButton> radios = new ArrayList<RadioButton>();
 
     /**
@@ -86,9 +87,20 @@ public class GRadioGroup {
             if (v.getClass().equals(RadioButton.class)) {
                 RadioButton rb = (RadioButton) v;
                 rb.setChecked(true);
+                if (mListener != null) {
+                    mListener.onCheckedChanged(rb, true);
+                }
             }
 
         }
     };
+
+    public void setOnCheckedChangeListener(OnCheckedChangeListener iListener) {
+        mListener = iListener;
+    }
+
+    public interface OnCheckedChangeListener {
+        void onCheckedChanged(RadioButton b, boolean isChecked);
+    }
 
 }
