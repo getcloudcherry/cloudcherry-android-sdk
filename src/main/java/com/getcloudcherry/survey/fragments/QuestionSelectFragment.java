@@ -11,6 +11,7 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
@@ -34,7 +35,7 @@ import com.getcloudcherry.survey.model.SurveyQuestions;
 /**
  * Fragment to display and handle Single Select type question
  */
-public class QuestionSelectFragment extends Fragment implements RadioGroup.OnCheckedChangeListener {
+public class QuestionSelectFragment extends Fragment implements RadioGroup.OnCheckedChangeListener, CompoundButton.OnCheckedChangeListener {
     //    private RadioGroup mRadioGroup;
     private GRadioGroup mRadioGroup;
     private FlowLayout mFlowLayout;
@@ -92,6 +93,7 @@ public class QuestionSelectFragment extends Fragment implements RadioGroup.OnChe
             aRadio.setGravity(Gravity.CENTER);
             aRadio.setTextSize(TypedValue.COMPLEX_UNIT_SP, 10);
             aRadio.setLayoutParams(aParams);
+            aRadio.setOnCheckedChangeListener(this);
             mFlowLayout.addView(aRadio);
             mRadioGroup.addRadioButton(aRadio);
         }
@@ -192,4 +194,14 @@ public class QuestionSelectFragment extends Fragment implements RadioGroup.OnChe
         }
     }
 
+    @Override
+    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+        Log.i("Radio", isChecked + "");
+        if (isChecked) {
+            mAnswer = buttonView.getText().toString();
+            Constants.logInfo("Answer", mAnswer);
+            RecordAnswer.getInstance().recordAnswer(mQuestion, mAnswer);
+            ConditionalFlowFilter.filterQuestion(mQuestion);
+        }
+    }
 }
