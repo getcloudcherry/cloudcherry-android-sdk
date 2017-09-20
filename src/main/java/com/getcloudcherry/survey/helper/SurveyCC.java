@@ -226,16 +226,15 @@ public class SurveyCC {
         mContext.startActivity(aIntent);
     }
 
-    /**
-     * Start survey activity with some request code awaiting some result from the SDK
+    /**Start survey activity with some request code awaiting some result from the SDK
      *
+     * @param iContext Activity context
      * @param iRequestCode Request code to start an activity
      */
-    public void triggerForResult(int iRequestCode) {
+    public void triggerForResult(Context iContext, int iRequestCode) {
         checkSDKInitialized();
         Intent aIntent = new Intent(mContext, SurveyActivity.class);
-        aIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        ((AppCompatActivity) mContext).startActivityForResult(aIntent, iRequestCode);
+        ((AppCompatActivity)iContext).startActivityForResult(aIntent, iRequestCode);
     }
 
     /**
