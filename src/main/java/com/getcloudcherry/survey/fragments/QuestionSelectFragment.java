@@ -34,7 +34,7 @@ import com.getcloudcherry.survey.model.SurveyQuestions;
 /**
  * Fragment to display and handle Single Select type question
  */
-public class QuestionSelectFragment extends Fragment implements RadioGroup.OnCheckedChangeListener {
+public class QuestionSelectFragment extends Fragment implements RadioGroup.OnCheckedChangeListener, GRadioGroup.OnCheckedChangeListener {
     //    private RadioGroup mRadioGroup;
     private GRadioGroup mRadioGroup;
     private FlowLayout mFlowLayout;
@@ -69,6 +69,7 @@ public class QuestionSelectFragment extends Fragment implements RadioGroup.OnChe
         initializeViewsWithConfig();
 //        mRadioGroup.setOnCheckedChangeListener(this);
         mRadioGroup = new GRadioGroup();
+        mRadioGroup.setOnCheckedChangeListener(this);
         createSingleSelect();
         mTVTitle.setText(mQuestion.text);
     }
@@ -192,4 +193,14 @@ public class QuestionSelectFragment extends Fragment implements RadioGroup.OnChe
         }
     }
 
+    @Override
+    public void onCheckedChanged(RadioButton b, boolean isChecked) {
+        Log.i("Radio", isChecked + "");
+        if (isChecked) {
+            mAnswer = b.getText().toString();
+            Constants.logInfo("Answer", mAnswer);
+            RecordAnswer.getInstance().recordAnswer(mQuestion, mAnswer);
+            ConditionalFlowFilter.filterQuestion(mQuestion);
+        }
+    }
 }
