@@ -167,6 +167,7 @@ public class SurveyActivity extends AppCompatActivity implements FragmentCallBac
                 aAlertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
+                        SurveyCC.getInstance().setIsUserTryingToExit(true);
                         if (RecordAnswer.getInstance().mAnswers.size() > 0) {
                             aAlertDialog.cancel();
                             submitAnswers();
@@ -332,6 +333,7 @@ public class SurveyActivity extends AppCompatActivity implements FragmentCallBac
         if (aAlertDialog != null) {
             aAlertDialog.cancel();
         }
+        SurveyCC.getInstance().setRecordedAnswerCount(RecordAnswer.getInstance().mAnswers.size());
         RecordAnswer.getInstance().reset();
         RecordAnalytics.getInstance().reset();
         replaceFragment(new ThanksFragment());

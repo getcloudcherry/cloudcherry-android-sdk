@@ -11,6 +11,7 @@ import com.getcloudcherry.survey.builder.SurveyConfigBuilder;
 import com.getcloudcherry.survey.filter.QuestionFilterHelper;
 import com.getcloudcherry.survey.interfaces.AnalyticsCallBack;
 import com.getcloudcherry.survey.interfaces.ConditionalChangesCallBack;
+import com.getcloudcherry.survey.interfaces.ExitCallBack;
 import com.getcloudcherry.survey.interfaces.FragmentCallBack;
 import com.getcloudcherry.survey.interfaces.QuestionCallback;
 import com.getcloudcherry.survey.model.Answer;
@@ -46,6 +47,8 @@ public class SurveyCC {
     public String THANKS_MESSAGE = "";
     public boolean SHOW_WELCOME_MESSAGE = false;
     public boolean SHOW_THANKS_MESSAGE = false;
+    private boolean mIsUserTryingToExit = false;
+    private int mRecordedAnswerCount;
 
     // Header Config variables
     public String HEADER_BACKGROUND_COLOR = "#FFFFFF";
@@ -85,6 +88,7 @@ public class SurveyCC {
     private ArrayList<QuestionCallback> mQuestionCallbacks = new ArrayList<>();
     private ArrayList<AnalyticsCallBack> mAnalyticsCallbacks = new ArrayList<>();
     private ArrayList<ConditionalChangesCallBack> mConditionalFlowCallbacks = new ArrayList<>();
+    private ArrayList<ExitCallBack> mExitCallBacks = new ArrayList<>();
 
     //Token Config
     private static SurveyToken mTokenConfig;
@@ -220,21 +224,23 @@ public class SurveyCC {
      * Start survey activity
      */
     public void trigger() {
+        resetExitCallBackParams();
         checkSDKInitialized();
         Intent aIntent = new Intent(mContext, SurveyActivity.class);
         aIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         mContext.startActivity(aIntent);
     }
 
-    /**Start survey activity with some request code awaiting some result from the SDK
+    /**
+     * Start survey activity with some request code awaiting some result from the SDK
      *
-     * @param iContext Activity context
+     * @param iContext     Activity context
      * @param iRequestCode Request code to start an activity
      */
     public void triggerForResult(Context iContext, int iRequestCode) {
         checkSDKInitialized();
         Intent aIntent = new Intent(mContext, SurveyActivity.class);
-        ((AppCompatActivity)iContext).startActivityForResult(aIntent, iRequestCode);
+        ((AppCompatActivity) iContext).startActivityForResult(aIntent, iRequestCode);
     }
 
     /**
@@ -357,6 +363,42 @@ public class SurveyCC {
         return mIsPartialCapture;
     }
 
+    /**
+     * Set if user is trying to exit in between
+     *
+     * @param isUserTryingToExit
+     */
+    public void setIsUserTryingToExit(boolean isUserTryingToExit) {
+        mIsUserTryingToExit = isUserTryingToExit;
+    }
+
+    /**
+     * Checks if user is trying to exit in between
+     *
+     * @return boolean
+     */
+    public boolean isUserTryingToExit() {
+        return mIsUserTryingToExit;
+    }
+
+    /**
+     * Set the number of recorded answers
+     *
+     * @param iRecordedAnswerCount
+     */
+    public void setRecordedAnswerCount(int iRecordedAnswerCount) {
+        mRecordedAnswerCount = iRecordedAnswerCount;
+    }
+
+    /**
+     * Get the number of recorded answers
+     *
+     * @return int
+     */
+    public int getRecordedAnswerCount() {
+        return mRecordedAnswerCount;
+    }
+
     public String getWelcomeMessage() {
         return WELCOME_MESSAGE;
     }
@@ -467,6 +509,11 @@ public class SurveyCC {
 
     public ArrayList<Integer> getStarRatingSelector() {
         return mStarRatingSelector;
+    }
+
+    public void resetExitCallBackParams() {
+        setIsUserTryingToExit(false);
+        setRecordedAnswerCount(0);
     }
 
     //***************************Fragment Data Callback*****************************//
@@ -653,6 +700,50 @@ public class SurveyCC {
     }
 
     //******************************Question CallBack**********************************//
+
+    //******************************Exit CallBack**********************************//
+
+    /**
+     * Sets exit listener to receive updates
+     *
+     * @param iCallBack
+     */
+    public void setExitListener(ExitCallBack iCallBack) {
+        if (iCallBack != null)
+            mExitCallBacks.add(iCallBack);
+    }
+
+    /**
+     * Removes exit listener
+     *
+     * @param iCallBack
+     */
+    public void removeExitListener(ExitCallBack iCallBack) {
+        if (iCallBack != null)
+            mExitCallBacks.remove(iCallBack);
+    }
+
+    /**
+     * Gets array list of all the listeners registered for survey exit
+     *
+     * @return
+     */
+    private ArrayList<ExitCallBack> getExitCallback() {
+        return mExitCallBacks;
+    }
+
+    /**
+     * Sends state of exit on exiting survey
+     */
+    public void sendExitState(ExitCallBack.SurveyState iSurveyState) {
+        if (mExitCallBacks != null) {
+            for (ExitCallBack aCallBack : mExitCallBacks) {
+                aCallBack.onSurveyExited(iSurveyState);
+            }
+        }
+    }
+
+    //******************************Analytics CallBack**********************************//
 
 
     /**
