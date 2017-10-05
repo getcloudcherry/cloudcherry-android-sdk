@@ -6,8 +6,11 @@ import com.getcloudcherry.survey.model.LoginToken;
 import com.getcloudcherry.survey.model.SurveyAnswers;
 import com.getcloudcherry.survey.model.SurveyResponse;
 import com.getcloudcherry.survey.model.SurveyToken;
+import com.getcloudcherry.survey.model.ThrottleResponse;
+import com.getcloudcherry.survey.model.ThrottlingLogicResponse;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import okhttp3.ResponseBody;
 import retrofit2.Call;
@@ -35,4 +38,10 @@ public interface API {
     @FormUrlEncoded
     @POST(APIHelper.POST_LOGIN_TOKEN)
     Call<LoginToken> login(@Field("grant_type") String grant_type, @Field("username") String username, @Field("password") String password);
+
+    @GET(APIHelper.GET_SURVEY_THROTTLE_LOGIC)
+    Call<List<ThrottlingLogicResponse>> getSurveyThrottlingLogic(@Path("location") String location);
+
+    @POST(APIHelper.POST_THROTTLING)
+    Call<List<ThrottleResponse>> checkThrottling(@Body ThrottlingLogicResponse.ThrottlingLogic logic);
 }

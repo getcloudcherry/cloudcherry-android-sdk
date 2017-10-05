@@ -33,11 +33,9 @@ import com.getcloudcherry.survey.httpclient.SurveyClient;
 import com.getcloudcherry.survey.interfaces.FragmentCallBack;
 import com.getcloudcherry.survey.model.Answer;
 import com.getcloudcherry.survey.model.CustomTextStyle;
-import com.getcloudcherry.survey.model.LoginToken;
 import com.getcloudcherry.survey.model.SurveyQuestions;
 import com.getcloudcherry.survey.model.SurveyResponse;
 import com.getcloudcherry.survey.model.SurveyToken;
-import com.getcloudcherry.survey.storage.CCPreferences;
 import com.koushikdutta.ion.Ion;
 
 import java.util.ArrayList;
@@ -59,6 +57,7 @@ public class SurveyActivity extends AppCompatActivity implements FragmentCallBac
     private static final int RETRY_LOGIN = 1;
     private static final int RETRY_CREATE_TOKEN = 2;
     private static final int RETRY_QUESTIONS = 3;
+    private static final int RETRY_GET_SURVEY_THROTTLING_LOGIC = 4;
     private AlertDialog aAlertDialog;
     private boolean mIsLastPage;
     private int mCurrentPage = 0;
@@ -72,7 +71,7 @@ public class SurveyActivity extends AppCompatActivity implements FragmentCallBac
         ION = Ion.getDefault(getApplicationContext());
 //        initToolbar();
         if (SurveyCC.getInstance().shouldCreateToken()) {
-            createTokenAndGetQuestions();
+            createNewSurveyToken();
         } else {
             getQuestions();
         }
@@ -373,13 +372,16 @@ public class SurveyActivity extends AppCompatActivity implements FragmentCallBac
                         submitAnswers();
                         break;
                     case RETRY_LOGIN:
-                        createTokenAndGetQuestions();
+//                        createTokenAndGetQuestions();
                         break;
                     case RETRY_CREATE_TOKEN:
                         createNewSurveyToken();
                         break;
                     case RETRY_QUESTIONS:
                         getQuestions();
+                        break;
+                    case RETRY_GET_SURVEY_THROTTLING_LOGIC:
+//                        getSurveyThrottlingLogic();
                         break;
                 }
             }
@@ -397,39 +399,6 @@ public class SurveyActivity extends AppCompatActivity implements FragmentCallBac
             mProgressLoading.setVisibility(View.GONE);
     }
 
-
-    /**
-     * API call to authenticate user and creates new survey token to fetch question list
-     */
-    void createTokenAndGetQuestions() {
-        showProgressBar();
-        Call<LoginToken> aCall = SurveyClient.get().login(Constants.GRANT_TYPE, SurveyCC.getInstance().getUserName(), SurveyCC.getInstance().getPassword());
-        aCall.enqueue(new Callback<LoginToken>() {
-            @Override
-            public void onResponse(Call<LoginToken> call, Response<LoginToken> response) {
-                try {
-                    if (response != null && response.body() != null && response.isSuccessful()) {
-                        CCPreferences.getInstance(SurveyCC.getInstance().getContext()).setUserDetail(response.body());
-                        createNewSurveyToken();
-                    }
-                } catch (Exception e) {
-                    Constants.logWarn("createTokenAndGetQuestions", e.getMessage());
-                }
-            }
-
-            @Override
-            public void onFailure(Call<LoginToken> call, Throwable t) {
-                try {
-                    hideProgressBar();
-                    showAlertRetryCallback(RETRY_LOGIN, getString(R.string.toast_failed_general), SurveyActivity.this);
-                    Constants.logWarn("createTokenAndGetQuestions onFailure", t.getMessage());
-                } catch (Exception e) {
-                    Constants.logWarn("createTokenAndGetQuestions onFailure", e.getMessage());
-                }
-            }
-        });
-
-    }
 
     /**
      * API call to create new Survey Token
