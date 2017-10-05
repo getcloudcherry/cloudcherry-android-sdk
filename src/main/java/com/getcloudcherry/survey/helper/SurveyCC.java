@@ -896,8 +896,10 @@ public class SurveyCC {
                         CCPreferences.getInstance(SurveyCC.getInstance().getContext()).setUserDetail(response.body());
                         if (toThrottle())
                             getSurveyThrottlingLogic(iCheckThrottleCallBack);
-                        else
+                        else {
+                            hideProgressBar();
                             iCheckThrottleCallBack.onResponse();
+                        }
                     }
                 } catch (Exception e) {
                     Constants.logWarn("login", e.getMessage());
@@ -970,9 +972,9 @@ public class SurveyCC {
             public void onResponse(Call<List<ThrottleResponse>> call, Response<List<ThrottleResponse>> response) {
                 try {
                     if (response != null && response.body() != null && response.body().size() > 0) {
+                        hideProgressBar();
                         if (response.body().get(0).key.equals(mThrottleUniqueId.get(mThrottleLogic.uniqueIDQuestionIdOrTag.toLowerCase())) && response.body().get(0).value)
                             iCheckThrottleCallBack.onResponse();
-                        hideProgressBar();
                     } else {
                         hideProgressBar();
                         showAlertRetryCallback(RETRY_CHECK_THROTTLING, mContext.getString(R.string.toast_failed_general), mActivityContext, iCheckThrottleCallBack);

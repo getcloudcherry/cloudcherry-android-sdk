@@ -55,10 +55,10 @@ public class ThanksFragment extends Fragment implements View.OnClickListener {
                 if (SurveyCC.getInstance().getRecordedAnswerCount() > 0) {
                     SurveyCC.getInstance().sendExitState(AnalyticsCallBack.SurveyExitedAt.WELCOME_SCREEN);
                 } else {
-                    SurveyCC.getInstance().sendExitState(AnalyticsCallBack.SurveyExitedAt.MID_WAY);
+                    SurveyCC.getInstance().sendExitState(AnalyticsCallBack.SurveyExitedAt.PARTIAL_COMPLETION);
                 }
             } else {
-                SurveyCC.getInstance().sendExitState(AnalyticsCallBack.SurveyExitedAt.ON_COMPLETION);
+                SurveyCC.getInstance().sendExitState(AnalyticsCallBack.SurveyExitedAt.COMPLETION);
             }
             getActivity().setResult(Activity.RESULT_OK);
             getActivity().finish();

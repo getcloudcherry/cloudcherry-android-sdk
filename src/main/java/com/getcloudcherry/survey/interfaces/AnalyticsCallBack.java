@@ -21,16 +21,16 @@ public interface AnalyticsCallBack {
                 return "Welcome Screen";
             }
         },
-        MID_WAY {
+        PARTIAL_COMPLETION {
             @Override
             public String toString() {
-                return "Mid Way";
+                return "Partial Completion";
             }
         },
-        ON_COMPLETION {
+        COMPLETION {
             @Override
             public String toString() {
-                return "On Completion";
+                return "Completion";
             }
         };
     }
