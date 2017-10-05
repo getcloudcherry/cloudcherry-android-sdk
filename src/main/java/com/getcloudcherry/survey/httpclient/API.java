@@ -6,6 +6,7 @@ import com.getcloudcherry.survey.model.LoginToken;
 import com.getcloudcherry.survey.model.SurveyAnswers;
 import com.getcloudcherry.survey.model.SurveyResponse;
 import com.getcloudcherry.survey.model.SurveyToken;
+import com.getcloudcherry.survey.model.ThrottleEntryRequest;
 import com.getcloudcherry.survey.model.ThrottleResponse;
 import com.getcloudcherry.survey.model.ThrottlingLogicResponse;
 
@@ -44,4 +45,7 @@ public interface API {
 
     @POST(APIHelper.POST_THROTTLING)
     Call<List<ThrottleResponse>> checkThrottling(@Body ThrottlingLogicResponse.ThrottlingLogic logic);
+
+    @POST(APIHelper.POST_THROTTLING_ADD_ENTRIES)
+    Call<ResponseBody> addThrottlingEntries(@Body List<ThrottleEntryRequest> iEntries);
 }
