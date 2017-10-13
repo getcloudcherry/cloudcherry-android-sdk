@@ -1,6 +1,9 @@
 package com.getcloudcherry.survey.helper;
 
+import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
@@ -9,6 +12,7 @@ import com.getcloudcherry.survey.R;
 import com.getcloudcherry.survey.SurveyActivity;
 import com.getcloudcherry.survey.builder.SurveyConfigBuilder;
 import com.getcloudcherry.survey.filter.QuestionFilterHelper;
+import com.getcloudcherry.survey.httpclient.SurveyClient;
 import com.getcloudcherry.survey.interfaces.AnalyticsCallBack;
 import com.getcloudcherry.survey.interfaces.ConditionalChangesCallBack;
 import com.getcloudcherry.survey.interfaces.FragmentCallBack;
@@ -16,12 +20,23 @@ import com.getcloudcherry.survey.interfaces.QuestionCallback;
 import com.getcloudcherry.survey.model.Answer;
 import com.getcloudcherry.survey.model.CustomTextStyle;
 import com.getcloudcherry.survey.model.Data;
+import com.getcloudcherry.survey.model.LoginToken;
 import com.getcloudcherry.survey.model.SurveyQuestions;
 import com.getcloudcherry.survey.model.SurveyResponse;
 import com.getcloudcherry.survey.model.SurveyToken;
+import com.getcloudcherry.survey.model.ThrottleEntryRequest;
+import com.getcloudcherry.survey.model.ThrottleResponse;
+import com.getcloudcherry.survey.model.ThrottlingLogicResponse;
+import com.getcloudcherry.survey.storage.CCPreferences;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 /**
  * Created by riteshdubey on 7/30/16.
@@ -32,11 +47,12 @@ import java.util.HashMap;
  */
 public class SurveyCC {
     public static SurveyCC mInstance;
-    public static Context mContext;
+    public static Context mContext, mActivityContext;
     private static String mSurveyToken;
     private static boolean mShouldCreate;
     private static ArrayList<Integer> mSmileyRatingSelector;
     private static ArrayList<Integer> mStarRatingSelector;
+    private static ProgressDialog mProgressDialog;
 
     private static String mUserName;
     private static String mPassword;
@@ -46,6 +62,15 @@ public class SurveyCC {
     public String THANKS_MESSAGE = "";
     public boolean SHOW_WELCOME_MESSAGE = false;
     public boolean SHOW_THANKS_MESSAGE = false;
+    private boolean mIsUserTryingToExit = false;
+    private int mRecordedAnswerCount;
+    private boolean mToThrottle;
+    private ThrottlingLogicResponse.ThrottlingLogic mThrottleLogic;
+    private HashMap<String, String> mThrottleUniqueId;
+
+    private static final int RETRY_LOGIN = 0;
+    private static final int RETRY_GET_SURVEY_THROTTLING_LOGIC = 1;
+    private static final int RETRY_CHECK_THROTTLING = 2;
 
     // Header Config variables
     public String HEADER_BACKGROUND_COLOR = "#FFFFFF";
@@ -85,6 +110,7 @@ public class SurveyCC {
     private ArrayList<QuestionCallback> mQuestionCallbacks = new ArrayList<>();
     private ArrayList<AnalyticsCallBack> mAnalyticsCallbacks = new ArrayList<>();
     private ArrayList<ConditionalChangesCallBack> mConditionalFlowCallbacks = new ArrayList<>();
+//    private ArrayList<ExitCallBack> mExitCallBacks = new ArrayList<>();
 
     //Token Config
     private static SurveyToken mTokenConfig;
@@ -93,27 +119,30 @@ public class SurveyCC {
      * Initializes the SDK with application context
      *
      * @param iContext     application context
+     * @param iUsername    Username for SDK
+     * @param iPassword    Password for SDK
      * @param iSurveyToken Survey Token provided by cloud cherry
      */
-    public static void initialise(Context iContext, String iSurveyToken) {
+    public static void initialise(Context iContext, String iUsername, String iPassword, String iSurveyToken) {
+        setCredentials(iUsername, iPassword);
         mContext = iContext;
         mSurveyToken = iSurveyToken;
-        mShouldCreate = false;
+        mShouldCreate = TextUtils.isEmpty(iSurveyToken);
         getInstance();
+        initialiseProgressDialog();
     }
 
     /**
      * Initializes the SDK with application context
      *
-     * @param iContext  application context
-     * @param iUsername Username for SDK
-     * @param iPassword Password for SDK
+     * @param iContext     application context
+     * @param iUsername    Username for SDK
+     * @param iPassword    Password for SDK
+     * @param iTokenConfig SurveyToken configuration
      */
     public static void initialise(Context iContext, String iUsername, String iPassword, SurveyToken iTokenConfig) {
-        setCredentials(iUsername, iPassword);
         mTokenConfig = iTokenConfig;
-        initialise(iContext, null);
-        mShouldCreate = true;
+        initialise(iContext, iUsername, iPassword, "");
     }
 
     private static void setCredentials(String iUserName, String iPassword) {
@@ -207,6 +236,16 @@ public class SurveyCC {
     }
 
     /**
+     * Initialises the progress loading dialog to show while API call is being done
+     */
+    private static void initialiseProgressDialog() {
+        mProgressDialog = new ProgressDialog(mContext);
+        mProgressDialog.setMessage(mContext.getString(R.string.please_wait));
+        mProgressDialog.setCancelable(false);
+        mProgressDialog.setCanceledOnTouchOutside(false);
+    }
+
+    /**
      * Gets application context of the application the SDK in integrated to.
      *
      * @return Context - application context
@@ -217,24 +256,81 @@ public class SurveyCC {
     }
 
     /**
-     * Start survey activity
+     * Start survey activity without throttling
+     *
+     * @param iContext Activity context
      */
-    public void trigger() {
+    public void trigger(Context iContext) {
+        trigger(iContext, false);
+    }
+
+    /**
+     * Start survey activity
+     *
+     * @param iContext    Activity context
+     * @param iToThrottle boolean that specifies if survey has to be throttled or not
+     */
+    public void trigger(Context iContext, boolean iToThrottle) {
+        mActivityContext = iContext;
+        mToThrottle = iToThrottle;
+        login(new CheckThrottleCallBack() {
+            @Override
+            public void onResponse() {
+                processTrigger();
+            }
+        });
+    }
+
+    /**
+     * Start survey activity with some request code awaiting some result from the SDK without throttling
+     *
+     * @param iContext     Activity context
+     * @param iRequestCode Request code to start an activity
+     */
+    public void triggerForResult(Context iContext, int iRequestCode) {
+        triggerForResult(iContext, iRequestCode, false);
+    }
+
+    /**
+     * Start survey activity with some request code awaiting some result from the SDK
+     *
+     * @param iContext     Activity context
+     * @param iRequestCode Request code to start an activity
+     * @param iToThrottle  boolean that specifies if survey has to be throttled or not
+     */
+    public void triggerForResult(final Context iContext, final int iRequestCode, boolean iToThrottle) {
+        mActivityContext = iContext;
+        mToThrottle = iToThrottle;
+        login(new CheckThrottleCallBack() {
+            @Override
+            public void onResponse() {
+                processTriggerForResult(iContext, iRequestCode);
+            }
+        });
+    }
+
+    /**
+     * Start survey activity after throttling check
+     */
+    private void processTrigger() {
+        resetExitCallBackParams();
         checkSDKInitialized();
         Intent aIntent = new Intent(mContext, SurveyActivity.class);
         aIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         mContext.startActivity(aIntent);
     }
 
-    /**Start survey activity with some request code awaiting some result from the SDK
+    /**
+     * Start survey activity with some request code awaiting some result from the SDK after throttling check
      *
-     * @param iContext Activity context
+     * @param iContext     Activity context
      * @param iRequestCode Request code to start an activity
      */
-    public void triggerForResult(Context iContext, int iRequestCode) {
+    private void processTriggerForResult(Context iContext, int iRequestCode) {
+        resetExitCallBackParams();
         checkSDKInitialized();
         Intent aIntent = new Intent(mContext, SurveyActivity.class);
-        ((AppCompatActivity)iContext).startActivityForResult(aIntent, iRequestCode);
+        ((AppCompatActivity) iContext).startActivityForResult(aIntent, iRequestCode);
     }
 
     /**
@@ -287,6 +383,24 @@ public class SurveyCC {
             for (Answer aAnswer : iPreFillAnswers) {
                 RecordAnswer.getInstance().recordAnswer(aAnswer.questionId, aAnswer);
             }
+    }
+
+    /**
+     * Sets unique Id for input in throttling logic
+     *
+     * @param iThrottleUniqueId HashMap of unique ID
+     *                          <br>key = "email", "mobile" and any other exact string of uniqueIDQuestionIdOrTag
+     *                          <br>value = email address, mobile number and uniqueIDQuestionIdOrTag that has to be sent as input
+     */
+    public void setThrottleUniqueId(HashMap<String, String> iThrottleUniqueId) {
+        mThrottleUniqueId = iThrottleUniqueId;
+    }
+
+    /**
+     * Get hash map of unique Id for input in throttling logic
+     */
+    public HashMap<String, String> getThrottleUniqueId() {
+        return mThrottleUniqueId;
     }
 
     /**
@@ -355,6 +469,51 @@ public class SurveyCC {
      */
     public boolean isPartialCapturing() {
         return mIsPartialCapture;
+    }
+
+    /**
+     * Set if user is trying to exit in between
+     *
+     * @param isUserTryingToExit
+     */
+    public void setIsUserTryingToExit(boolean isUserTryingToExit) {
+        mIsUserTryingToExit = isUserTryingToExit;
+    }
+
+    /**
+     * Checks if user is trying to exit in between
+     *
+     * @return boolean
+     */
+    public boolean isUserTryingToExit() {
+        return mIsUserTryingToExit;
+    }
+
+    /**
+     * Set the number of recorded answers
+     *
+     * @param iRecordedAnswerCount
+     */
+    public void setRecordedAnswerCount(int iRecordedAnswerCount) {
+        mRecordedAnswerCount = iRecordedAnswerCount;
+    }
+
+    /**
+     * Checks if to throttle or not
+     *
+     * @return boolean
+     */
+    public boolean toThrottle() {
+        return mToThrottle;
+    }
+
+    /**
+     * Get the number of recorded answers
+     *
+     * @return int
+     */
+    public int getRecordedAnswerCount() {
+        return mRecordedAnswerCount;
     }
 
     public String getWelcomeMessage() {
@@ -467,6 +626,11 @@ public class SurveyCC {
 
     public ArrayList<Integer> getStarRatingSelector() {
         return mStarRatingSelector;
+    }
+
+    public void resetExitCallBackParams() {
+        setIsUserTryingToExit(false);
+        setRecordedAnswerCount(0);
     }
 
     //***************************Fragment Data Callback*****************************//
@@ -607,6 +771,17 @@ public class SurveyCC {
         }
     }
 
+    /**
+     * Sends state of exit on exiting survey
+     */
+    public void sendExitState(AnalyticsCallBack.SurveyExitedAt iSurveyExitedAt) {
+        if (mAnalyticsCallbacks != null) {
+            for (AnalyticsCallBack aCallBack : mAnalyticsCallbacks) {
+                aCallBack.onSurveyExited(iSurveyExitedAt);
+            }
+        }
+    }
+
     //******************************Analytics CallBack**********************************//
 
     //******************************Conditional Question CallBack**********************************//
@@ -653,7 +828,6 @@ public class SurveyCC {
     }
 
     //******************************Question CallBack**********************************//
-
 
     /**
      * Sets SurveyResponse object
@@ -704,6 +878,193 @@ public class SurveyCC {
      */
     public void addConditionalSurveyQuestions(SurveyQuestions iQuestion) {
         mConditionalQuestions.add(iQuestion);
+    }
+
+    /**
+     * API call to authenticate user and creates new survey token to fetch question list
+     *
+     * @param iCheckThrottleCallBack
+     */
+    private void login(final CheckThrottleCallBack iCheckThrottleCallBack) {
+        showProgressBar();
+        Call<LoginToken> aCall = SurveyClient.get().login(Constants.GRANT_TYPE, SurveyCC.getInstance().getUserName(), SurveyCC.getInstance().getPassword());
+        aCall.enqueue(new Callback<LoginToken>() {
+            @Override
+            public void onResponse(Call<LoginToken> call, Response<LoginToken> response) {
+                try {
+                    if (response != null && response.body() != null && response.isSuccessful()) {
+                        CCPreferences.getInstance(SurveyCC.getInstance().getContext()).setUserDetail(response.body());
+                        if (toThrottle())
+                            getSurveyThrottlingLogic(iCheckThrottleCallBack);
+                        else {
+                            hideProgressBar();
+                            iCheckThrottleCallBack.onResponse();
+                        }
+                    }
+                } catch (Exception e) {
+                    Constants.logWarn("login", e.getMessage());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<LoginToken> call, Throwable t) {
+                try {
+                    hideProgressBar();
+                    showAlertRetryCallback(RETRY_LOGIN, mContext.getString(R.string.toast_failed_general), mActivityContext, iCheckThrottleCallBack);
+                    Constants.logWarn("login onFailure", t.getMessage());
+                } catch (Exception e) {
+                    Constants.logWarn("login onFailure", e.getMessage());
+                }
+            }
+        });
+
+    }
+
+    /**
+     * API call to get throttling logic
+     *
+     * @param iCheckThrottleCallBack
+     */
+    private void getSurveyThrottlingLogic(final CheckThrottleCallBack iCheckThrottleCallBack) {
+        showProgressBar();
+        Call<List<ThrottlingLogicResponse>> aCall = SurveyClient.getApiDispatcher().getSurveyThrottlingLogic(SurveyCC.getInstance().getTokenConfig() != null ? SurveyCC.getInstance().getTokenConfig().location : "mobile");
+        aCall.enqueue(new Callback<List<ThrottlingLogicResponse>>() {
+            @Override
+            public void onResponse(Call<List<ThrottlingLogicResponse>> call, Response<List<ThrottlingLogicResponse>> response) {
+                try {
+                    if (response != null && response.body() != null && response.body().size() > 0) {
+                        mThrottleLogic = response.body().get(0).logic;
+                        checkThrottling(iCheckThrottleCallBack);
+                    }
+                } catch (Exception e) {
+                    Constants.logWarn("getSurveyThrottlingLogic onResponse", e.getMessage());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<ThrottlingLogicResponse>> call, Throwable t) {
+                try {
+                    hideProgressBar();
+                    showAlertRetryCallback(RETRY_GET_SURVEY_THROTTLING_LOGIC, mContext.getString(R.string.toast_failed_general), mActivityContext, iCheckThrottleCallBack);
+                    Constants.logWarn("getSurveyThrottlingLogic onFailure", t.getMessage());
+                } catch (Exception e) {
+                    Constants.logWarn("getSurveyThrottlingLogic onFailure", e.getMessage());
+                }
+            }
+        });
+    }
+
+    private void checkThrottling(final CheckThrottleCallBack iCheckThrottleCallBack) {
+        if (mThrottleLogic != null) {
+            if (mThrottleLogic.inputIds == null) {
+                mThrottleLogic.inputIds = new ArrayList<>();
+            }
+            mThrottleLogic.inputIds.add(mThrottleUniqueId.get(mThrottleLogic.uniqueIDQuestionIdOrTag.toLowerCase()));
+            if (mThrottleLogic.logics != null && mThrottleLogic.logics.size() > 0 && mTokenConfig != null) {
+                mThrottleLogic.logics.get(0).filter.location = new ArrayList<>();
+                mThrottleLogic.logics.get(0).filter.location.add(mTokenConfig.location);
+            }
+        }
+        showProgressBar();
+        Call<List<ThrottleResponse>> aCall = SurveyClient.getApiDispatcher().checkThrottling(mThrottleLogic);
+        aCall.enqueue(new Callback<List<ThrottleResponse>>() {
+            @Override
+            public void onResponse(Call<List<ThrottleResponse>> call, Response<List<ThrottleResponse>> response) {
+                try {
+                    if (response != null && response.body() != null && response.body().size() > 0) {
+                        hideProgressBar();
+                        if (response.body().get(0).key.equals(mThrottleUniqueId.get(mThrottleLogic.uniqueIDQuestionIdOrTag.toLowerCase())) && response.body().get(0).value)
+                            iCheckThrottleCallBack.onResponse();
+                    } else {
+                        hideProgressBar();
+                        showAlertRetryCallback(RETRY_CHECK_THROTTLING, mContext.getString(R.string.toast_failed_general), mActivityContext, iCheckThrottleCallBack);
+                    }
+                } catch (Exception e) {
+                    Constants.logWarn("checkThrottling onResponse", e.getMessage());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<ThrottleResponse>> call, Throwable t) {
+                try {
+                    hideProgressBar();
+                    showAlertRetryCallback(RETRY_CHECK_THROTTLING, mContext.getString(R.string.toast_failed_general), mActivityContext, iCheckThrottleCallBack);
+                    Constants.logWarn("checkThrottling onFailure", t.getMessage());
+                } catch (Exception e) {
+                    Constants.logWarn("checkThrottling onFailure", e.getMessage());
+                }
+            }
+        });
+    }
+
+    /**
+     * Shows alert dialog to retry if any of the APIs fail to respond
+     *
+     * @param iWhich   which API to call integer constant
+     * @param iMessage message to be shown
+     * @param iContext Activity context
+     */
+    private void showAlertRetryCallback(final int iWhich, String iMessage, Context iContext, final CheckThrottleCallBack iCheckThrottleCallBack) {
+        AlertDialog dialog = new AlertDialog.Builder(iContext).create();
+        dialog.setTitle(iContext.getString(R.string.alert_title_alert));
+        dialog.setMessage(iMessage);
+        dialog.setCancelable(false);
+        dialog.setButton(AlertDialog.BUTTON_POSITIVE, iContext.getString(R.string.alert_retry), new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                switch (iWhich) {
+                    case RETRY_LOGIN:
+                        login(iCheckThrottleCallBack);
+                        break;
+                    case RETRY_GET_SURVEY_THROTTLING_LOGIC:
+                        getSurveyThrottlingLogic(iCheckThrottleCallBack);
+                        break;
+                    case RETRY_CHECK_THROTTLING:
+                        checkThrottling(iCheckThrottleCallBack);
+                }
+            }
+        });
+        dialog.show();
+    }
+
+    public void addThrottleEntry(ThrottleEntryRequest iThrottleEntry) {
+        List<ThrottleEntryRequest> aThrottleEntries = new ArrayList<>();
+        aThrottleEntries.add(iThrottleEntry);
+        Call<ResponseBody> aCall = SurveyClient.getApiDispatcher().addThrottlingEntries(aThrottleEntries);
+        aCall.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                try {
+
+                } catch (Exception e) {
+                    Constants.logWarn("addThrottleEntry onResponse", e.getMessage());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                try {
+                    Constants.logWarn("addThrottleEntry onFailure", t.getMessage());
+                } catch (Exception e) {
+                    Constants.logWarn("addThrottleEntry onFailure", e.getMessage());
+                }
+            }
+        });
+    }
+
+    private void showProgressBar() {
+        if (mProgressDialog != null && !mProgressDialog.isShowing())
+            mProgressDialog.show();
+    }
+
+    private void hideProgressBar() {
+        if (mProgressDialog != null)
+            mProgressDialog.dismiss();
+    }
+
+
+    interface CheckThrottleCallBack {
+        void onResponse();
     }
 
 }

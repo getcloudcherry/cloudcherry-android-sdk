@@ -13,6 +13,7 @@ import android.widget.TextView;
 
 import com.getcloudcherry.survey.R;
 import com.getcloudcherry.survey.helper.SurveyCC;
+import com.getcloudcherry.survey.interfaces.AnalyticsCallBack;
 
 
 public class ThanksFragment extends Fragment implements View.OnClickListener {
@@ -50,6 +51,15 @@ public class ThanksFragment extends Fragment implements View.OnClickListener {
     public void onClick(View view) {
         int i = view.getId();
         if (i == R.id.bThanks) {
+            if (SurveyCC.getInstance().isUserTryingToExit()) {
+                if (SurveyCC.getInstance().getRecordedAnswerCount() > 0) {
+                    SurveyCC.getInstance().sendExitState(AnalyticsCallBack.SurveyExitedAt.WELCOME_SCREEN);
+                } else {
+                    SurveyCC.getInstance().sendExitState(AnalyticsCallBack.SurveyExitedAt.PARTIAL_COMPLETION);
+                }
+            } else {
+                SurveyCC.getInstance().sendExitState(AnalyticsCallBack.SurveyExitedAt.COMPLETION);
+            }
             getActivity().setResult(Activity.RESULT_OK);
             getActivity().finish();
         }

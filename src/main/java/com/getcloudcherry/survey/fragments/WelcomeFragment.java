@@ -12,7 +12,9 @@ import android.widget.TextView;
 
 import com.getcloudcherry.survey.R;
 import com.getcloudcherry.survey.SurveyActivity;
+import com.getcloudcherry.survey.helper.DateUtils;
 import com.getcloudcherry.survey.helper.SurveyCC;
+import com.getcloudcherry.survey.model.ThrottleEntryRequest;
 
 
 public class WelcomeFragment extends Fragment implements View.OnClickListener {
@@ -40,6 +42,7 @@ public class WelcomeFragment extends Fragment implements View.OnClickListener {
         mBYes = (Button) view.findViewById(R.id.bYes);
         mBYes.setOnClickListener(this);
         setWelcomeMessage(SurveyCC.getInstance().getWelcomeMessage());
+        createAndAddThrottleEntry(DateUtils.getCurrentTimeStamp(System.currentTimeMillis()), false);
     }
 
     void setWelcomeMessage(String iMessage) {
@@ -51,6 +54,20 @@ public class WelcomeFragment extends Fragment implements View.OnClickListener {
         int i = view.getId();
         if (i == R.id.bYes) {
             ((SurveyActivity) getActivity()).replaceFragment(new MultiPageFragment());
+            createAndAddThrottleEntry(DateUtils.getCurrentTimeStamp(System.currentTimeMillis()), true);
         }
+    }
+
+    private void createAndAddThrottleEntry(String iTimeStamp, boolean isOpened) {
+        ThrottleEntryRequest aThrottleEntry = new ThrottleEntryRequest(SurveyCC.getInstance().getUserName(),
+                SurveyCC.getInstance().getThrottleUniqueId().get("mobile"),
+                SurveyCC.getInstance().getThrottleUniqueId().get("email"),
+                null,
+                isOpened ? null : iTimeStamp,
+                isOpened ? iTimeStamp : null,
+                null,
+                isOpened);
+
+        SurveyCC.getInstance().addThrottleEntry(aThrottleEntry);
     }
 }

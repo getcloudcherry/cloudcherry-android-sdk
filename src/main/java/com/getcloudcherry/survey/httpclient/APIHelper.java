@@ -14,6 +14,9 @@ public class APIHelper {
     public static final String POST_ANSWER_ALL = "SurveyByToken/{token}";
     public static final String POST_CREATE_SURVEY_TOKEN = "SurveyToken";
     public static final String POST_LOGIN_TOKEN = "LoginToken";
+    public static final String GET_SURVEY_THROTTLE_LOGIC = "SurveyThrottleLogic/{location}";
+    public static final String POST_THROTTLING = "Throttling";
+    public static final String POST_THROTTLING_ADD_ENTRIES = "Throttling/AddEntries";
 
     /**
      * Validates email
