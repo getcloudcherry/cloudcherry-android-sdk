@@ -777,7 +777,7 @@ public class SurveyCC {
     public void sendExitState(AnalyticsCallBack.SurveyExitedAt iSurveyExitedAt) {
         if (mAnalyticsCallbacks != null) {
             for (AnalyticsCallBack aCallBack : mAnalyticsCallbacks) {
-                aCallBack.onSurveyExited(iSurveyExitedAt);
+                aCallBack.onSurveyExited(iSurveyExitedAt, getSurveyToken());
             }
         }
     }

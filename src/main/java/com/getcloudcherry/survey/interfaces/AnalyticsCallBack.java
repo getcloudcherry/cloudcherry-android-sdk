@@ -12,7 +12,7 @@ public interface AnalyticsCallBack {
 
     void onUpdatedAnalyticsData(ArrayList<Data> iData);
 
-    void onSurveyExited(SurveyExitedAt iSurveyExitedAt);
+    void onSurveyExited(SurveyExitedAt iSurveyExitedAt, String iSurveyToken);
 
     enum SurveyExitedAt {
         WELCOME_SCREEN {
