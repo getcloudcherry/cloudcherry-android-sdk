@@ -119,6 +119,20 @@ public class SurveyCC {
      * Initializes the SDK with application context
      *
      * @param iContext     application context
+     * @param iSurveyToken Survey Token provided by cloud cherry
+     */
+    public static void initialise(Context iContext, String iSurveyToken) {
+        mContext = iContext;
+        mSurveyToken = iSurveyToken;
+        mShouldCreate = TextUtils.isEmpty(iSurveyToken);
+        getInstance();
+        initialiseProgressDialog();
+    }
+
+    /**
+     * Initializes the SDK with application context
+     *
+     * @param iContext     application context
      * @param iUsername    Username for SDK
      * @param iPassword    Password for SDK
      * @param iSurveyToken Survey Token provided by cloud cherry
@@ -260,7 +274,7 @@ public class SurveyCC {
      *
      * @param iContext Activity context
      */
-    public void trigger(Context iContext) {
+    public void trigger(Context iContext) throws Exception {
         trigger(iContext, false);
     }
 
@@ -270,15 +284,21 @@ public class SurveyCC {
      * @param iContext    Activity context
      * @param iToThrottle boolean that specifies if survey has to be throttled or not
      */
-    public void trigger(Context iContext, boolean iToThrottle) {
+    public void trigger(Context iContext, boolean iToThrottle) throws Exception {
         mActivityContext = iContext;
         mToThrottle = iToThrottle;
-        login(new CheckThrottleCallBack() {
-            @Override
-            public void onResponse() {
-                processTrigger();
-            }
-        });
+        if (mToThrottle || shouldCreateToken()) {
+            if (TextUtils.isEmpty(getUserName()) || TextUtils.isEmpty(getPassword())) {
+                throw new Exception("Please provide username and password.");
+            } else
+                login(new CheckThrottleCallBack() {
+                    @Override
+                    public void onResponse() {
+                        processTrigger();
+                    }
+                });
+        } else
+            processTrigger();
     }
 
     /**
@@ -287,7 +307,7 @@ public class SurveyCC {
      * @param iContext     Activity context
      * @param iRequestCode Request code to start an activity
      */
-    public void triggerForResult(Context iContext, int iRequestCode) {
+    public void triggerForResult(Context iContext, int iRequestCode) throws Exception {
         triggerForResult(iContext, iRequestCode, false);
     }
 
@@ -298,15 +318,21 @@ public class SurveyCC {
      * @param iRequestCode Request code to start an activity
      * @param iToThrottle  boolean that specifies if survey has to be throttled or not
      */
-    public void triggerForResult(final Context iContext, final int iRequestCode, boolean iToThrottle) {
+    public void triggerForResult(final Context iContext, final int iRequestCode, boolean iToThrottle) throws Exception {
         mActivityContext = iContext;
         mToThrottle = iToThrottle;
-        login(new CheckThrottleCallBack() {
-            @Override
-            public void onResponse() {
-                processTriggerForResult(iContext, iRequestCode);
-            }
-        });
+        if (mToThrottle || shouldCreateToken()) {
+            if (TextUtils.isEmpty(getUserName()) || TextUtils.isEmpty(getPassword())) {
+                throw new Exception("Please provide username and password.");
+            } else
+                login(new CheckThrottleCallBack() {
+                    @Override
+                    public void onResponse() {
+                        processTriggerForResult(iContext, iRequestCode);
+                    }
+                });
+        } else
+            processTriggerForResult(iContext, iRequestCode);
     }
 
     /**
@@ -900,6 +926,10 @@ public class SurveyCC {
                             hideProgressBar();
                             iCheckThrottleCallBack.onResponse();
                         }
+                    } else {
+                        hideProgressBar();
+                        showAlertRetryCallback(RETRY_LOGIN, mContext.getString(R.string.toast_failed_general), mActivityContext, iCheckThrottleCallBack);
+                        Constants.logWarn("login onFailure", "problem in response");
                     }
                 } catch (Exception e) {
                     Constants.logWarn("login", e.getMessage());
@@ -935,6 +965,10 @@ public class SurveyCC {
                     if (response != null && response.body() != null && response.body().size() > 0) {
                         mThrottleLogic = response.body().get(0).logic;
                         checkThrottling(iCheckThrottleCallBack);
+                    } else {
+                        hideProgressBar();
+                        showAlertRetryCallback(RETRY_LOGIN, mContext.getString(R.string.toast_failed_general), mActivityContext, iCheckThrottleCallBack);
+                        Constants.logWarn("login onFailure", "problem in response");
                     }
                 } catch (Exception e) {
                     Constants.logWarn("getSurveyThrottlingLogic onResponse", e.getMessage());
